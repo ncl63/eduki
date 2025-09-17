@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>App CP – Trouve la lettre</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+      --green-200: #bbf7d0;
+      --green-400: #4ade80;
+      --red-200: #fecaca;
+      --red-400: #f87171;
+      --border: #e5e7eb;
+      --card: #f9fafb;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden; /* no scroll */
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 16px; width: 100%; }
+    .header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: saturate(180%) blur(8px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .grow { flex: 1 1 auto; }
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #f3f4f6;
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 16px;
+    }
+    button.primary {
+      background: var(--primary);
+      color: white;
+      border-color: transparent;
+    }
+    button.primary:hover { background: var(--primary-600); }
+    button:hover { filter: brightness(0.98); }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .bigcard {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      text-align: left;
+    }
+    .bigcard h3 { margin: 6px 0; font-size: 22px; }
+    .bigcard p { margin: 0; color: var(--muted); }
+    .playzone {
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      height: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .letter-btn {
+      position: absolute;
+      user-select: none;
+      border: 2px solid var(--border);
+      background: white;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transform: translate(-50%, -50%);
+      min-width: 64px; min-height: 64px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .good { background: var(--green-200); border-color: var(--green-400); }
+    .bad  { background: var(--red-200);  border-color: var(--red-400); }
+    .subtitle { color: var(--muted); }
+    .hidden { display: none !important; }
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+    }
+    .panel h2 { margin-top: 0; }
+    .section { margin-bottom: 18px; }
+    .section h3 { margin: 8px 0; font-size: 18px; }
+    label span { font-size: 13px; color: var(--muted); }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 16px;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .footer { border-top: 1px solid var(--border); padding: 10px 16px; background: #fff; }
+    .star { display: inline-flex; align-items: center; gap: 6px; }
+    .pill { border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 14px; }
+    @media (max-width: 760px) {
+      .cards { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .playzone { height: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container row">
+      <button id="homeBtn">🏠 Accueil</button>
+      <div class="grow"></div>
+      <div class="star pill">⭐ <span id="stars">0</span>/10</div>
+      <button id="teacherBtn">🔧</button>
+    </div>
+  </header>
+
+  <main class="container" id="main">
+    <!-- content injected by JS -->
+  </main>
+
+  <footer class="footer">
+    <div class="container row">
+      <span class="subtitle">Astuce iPad : “Ajouter à l’écran d’accueil” pour le plein écran.</span>
+      <div class="grow"></div>
+      <span class="pill">Version sans build (HTML+JS)</span>
+    </div>
+  </footer>
+
+<script>
+(function(){
+  const STAR_GOAL = 10;
+  const DEFAULTS = {
+    targetLetter: 'U',
+    distractorLetters: 'ABCDE',
+    itemsCount: 14,
+    targetRatio: 0.4,
+    letterStyle: 'baton' // baton|cursif|script|serif
+  };
+
+  const $main = document.getElementById('main');
+  const $homeBtn = document.getElementById('homeBtn');
+  const $teacherBtn = document.getElementById('teacherBtn');
+  let stars = loadNumber('cp_stars', 0);
+  let settings = loadSettings();
+
+  document.getElementById('stars').textContent = String(stars);
+
+  $homeBtn.addEventListener('click', () => showHome());
+  $teacherBtn.addEventListener('click', () => showTeacher());
+
+  // Initial screen
+  showHome();
+
+  function showHome(){
+    $main.innerHTML = '';
+    const cards = div('cards');
+    cards.appendChild(bigCard('🔎','Trouve la lettre','Clique sur tous les exemplaires', () => showGame()));
+    cards.appendChild(bigCard('🔧','Mode enseignant','Régler l’app (lettres, style, etc.)', () => showTeacher()));
+    $main.appendChild(cards);
+  }
+
+  function showGame(){
+    $main.innerHTML = '';
+
+    const back = button('⬅️ Accueil', () => showHome());
+    $main.appendChild(back);
+
+    const title = el('div', { style: 'margin:10px 0; font-size: 22px; font-weight: 600;' },
+      'Clique sur tous les ',
+      el('span', { style: 'color: var(--primary);' }, settings.targetLetter),
+      ' que tu vois'
+    );
+    $main.appendChild(title);
+
+    const zone = div('playzone');
+    $main.appendChild(zone);
+
+    const feedback = el('div', { style: 'margin-top:10px; font-size:18px; font-weight:700;' });
+    $main.appendChild(feedback);
+
+    const letters = makeScatterRound(settings);
+    letters.forEach(card => {
+      const b = button(card.char, () => onClick(card), 'letter-btn');
+      // font family by style
+      b.style.fontFamily = fontForStyle(settings.letterStyle);
+      b.style.left = card.x + '%';
+      b.style.top  = card.y + '%';
+      zone.appendChild(b);
+      card.$el = b;
+    });
+
+    function onClick(card){
+      if(card.state === 'locked') return;
+      card.state = 'locked';
+      if(card.isTarget){
+        card.$el.classList.add('good');
+      } else {
+        card.$el.classList.add('bad');
+      }
+      const remaining = letters.filter(c => c.isTarget && c.state !== 'locked').length;
+      if(card.isTarget && remaining === 0){
+        feedback.textContent = 'Bravo ! ⭐';
+        stars = Math.min(STAR_GOAL, stars + 1);
+        document.getElementById('stars').textContent = String(stars);
+        try { localStorage.setItem('cp_stars', String(stars)); } catch {}
+        setTimeout(() => showGame(), 900);
+      } else if(!card.isTarget){
+        feedback.textContent = 'Essaie encore';
+        setTimeout(() => feedback.textContent = '', 700);
+      }
+    }
+  }
+
+  function showTeacher(){
+    $main.innerHTML = '';
+    const panel = div('panel');
+    panel.appendChild(button('⬅️', () => showHome()));
+    panel.appendChild(el('h2', {}, 'Réglages enseignant'));
+
+    // Sections
+    const secLetters = section('Lettres');
+    const $target = inputText(settings.targetLetter, 1);
+    const $distr  = inputText(settings.distractorLetters);
+    secLetters.appendChild(field('Lettre cible', $target, '1 lettre, ex: U'));
+    secLetters.appendChild(field('Lettres distractrices', $distr, 'ex: ABCD (majuscules)'));
+    panel.appendChild(secLetters);
+
+    const secGame = section('Paramètres de jeu');
+    const $items = inputNumber(settings.itemsCount, 8, 24);
+    const $ratio = inputNumber(settings.targetRatio, 0.1, 0.9, 0.1);
+    secGame.appendChild(field('Nombre de cartes', $items));
+    secGame.appendChild(field('Proportion de bonnes lettres', $ratio, 'entre 0.1 et 0.9'));
+    panel.appendChild(secGame);
+
+    const secVisual = section('Paramètres visuels');
+    const $style = select([['baton','bâton'],['cursif','cursif'],['script','script'],['serif','serif']], settings.letterStyle);
+    secVisual.appendChild(field('Style d’écriture', $style));
+    panel.appendChild(secVisual);
+
+    const saveBtn = button('Enregistrer', () => {
+      const next = {
+        targetLetter: ($target.value || 'U').toUpperCase().slice(0,1),
+        distractorLetters: ($distr.value || '').toUpperCase().replace(/[^A-Z]/g,''),
+        itemsCount: clampInt(Number($items.value)||14, 8, 24),
+        targetRatio: clampRatio(Number($ratio.value)||0.4),
+        letterStyle: $style.value
+      };
+      settings = next;
+      saveSettings(next);
+      showHome();
+    });
+    saveBtn.classList.add('primary');
+    panel.appendChild(saveBtn);
+
+    $main.appendChild(panel);
+  }
+
+  // --- Placement logic without overlap ---
+  function makeScatterRound(s){
+    const total = clampInt(s.itemsCount, 8, 24);
+    const targetCount = Math.max(1, Math.round(total * clampRatio(s.targetRatio)));
+    let distractorCount = total - targetCount;
+
+    const target = (s.targetLetter || 'U').toUpperCase();
+    const targets = [target];
+
+    let pool = (s.distractorLetters || 'ABCDE').toUpperCase().split('').filter(l => !targets.includes(l));
+    if(pool.length === 0){ distractorCount = 0; }
+
+    const distractors = [];
+    for(let i=0;i<distractorCount;i++) distractors.push(randomPick(pool));
+
+    const chars = [
+      ...Array.from({length: targetCount}, () => target),
+      ...distractors,
+    ];
+
+    const minDist = computeMinDistPercent(chars.length);
+    const points = placePointsNoOverlap(chars.length, { minDistPercent: minDist });
+
+    const placed = [];
+    let id = 1;
+    for(let i=0;i<chars.length;i++){
+      const {x,y} = points[i];
+      const ch = chars[i];
+      placed.push({ id: id++, char: ch.toUpperCase(), x, y, isTarget: ch === target, state: 'idle' });
+    }
+    return placed;
+  }
+
+  function computeMinDistPercent(count){
+    const base = 22;
+    const k = 0.35 * (count - 8);
+    return Math.max(14, Math.min(22, Math.round(base - k)));
+  }
+  function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {}){
+    const accepted = [];
+    let attempts = 0;
+    let minD = minDistPercent;
+    while(accepted.length < n && attempts < maxAttempts){
+      attempts++;
+      const x = randFloat(10, 90);
+      const y = randFloat(12, 88);
+      const ok = accepted.every(p => dist(p.x, p.y, x, y) >= minD);
+      if(ok){ accepted.push({x,y}); }
+      if(attempts % 1000 === 0 && accepted.length < n && minD > 12){ minD -= 1; }
+    }
+    while(accepted.length < n){
+      accepted.push({ x: randFloat(15,85), y: randFloat(18,82) });
+    }
+    return accepted;
+  }
+
+  // --- Mini helpers & storage ---
+  function button(text, onClick, className=''){
+    const b = document.createElement('button');
+    b.textContent = text;
+    if(className) b.className = className;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function bigCard(icon, title, subtitle, onClick){
+    const wrap = div('bigcard');
+    const btn = button(icon + ' ' + title, onClick);
+    btn.style.display='block';
+    btn.style.width='100%';
+    btn.style.textAlign='left';
+    btn.style.background='transparent';
+    btn.style.border='none';
+    btn.style.padding='0';
+    btn.style.fontSize='inherit';
+    btn.style.color='inherit';
+    const h3 = document.createElement('h3'); h3.textContent = title;
+    const p = document.createElement('p'); p.textContent = subtitle; p.className='subtitle';
+    wrap.appendChild(el('div',{style:'font-size:42px; margin-bottom:8px;'}, icon));
+    wrap.appendChild(h3);
+    wrap.appendChild(p);
+    wrap.addEventListener('click', onClick);
+    return wrap;
+  }
+  function section(title){
+    const s = div('section');
+    const h = document.createElement('h3'); h.textContent = title; s.appendChild(h);
+    return s;
+  }
+  function field(labelText, controlEl, hint){
+    const wrap = document.createElement('label');
+    wrap.className = 'grid-2';
+    const l = document.createElement('div');
+    l.innerHTML = '<strong>'+labelText+'</strong>' + (hint ? '<br><span>'+hint+'</span>' : '');
+    wrap.appendChild(l);
+    const c = document.createElement('div'); c.appendChild(controlEl); wrap.appendChild(c);
+    return wrap;
+  }
+  function inputText(value='', maxLength){
+    const i = document.createElement('input');
+    i.type = 'text';
+    if(maxLength) i.maxLength = maxLength;
+    i.value = value || '';
+    return i;
+  }
+  function inputNumber(value=0, min, max, step=1){
+    const i = document.createElement('input');
+    i.type = 'number';
+    if(min!=null) i.min = String(min);
+    if(max!=null) i.max = String(max);
+    if(step!=null) i.step = String(step);
+    i.value = String(value);
+    return i;
+  }
+  function select(options, value){
+    const s = document.createElement('select');
+    options.forEach(([val, label]) => {
+      const o = document.createElement('option');
+      o.value = val; o.textContent = label;
+      if(val === value) o.selected = true;
+      s.appendChild(o);
+    });
+    return s;
+  }
+  function div(cls){ const d = document.createElement('div'); if(cls) d.className = cls; return d; }
+  function el(tag, attrs={}, ...children){
+    const e = document.createElement(tag);
+    for(const k in attrs){ e.setAttribute(k, attrs[k]); }
+    children.forEach(c => {
+      if(typeof c === 'string') e.appendChild(document.createTextNode(c));
+      else if(c) e.appendChild(c);
+    });
+    return e;
+  }
+  function randFloat(min, max){ return Math.random() * (max - min) + min; }
+  function dist(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return Math.sqrt(dx*dx + dy*dy); }
+  function clampInt(n,a,b){ return Math.max(a, Math.min(b, Math.round(n||0))); }
+  function clampRatio(r){ const n = Number(r); const val = Number.isFinite(n) ? n : 0.4; return Math.max(0.1, Math.min(0.9, val)); }
+  function fontForStyle(style){
+    switch(style){
+      case 'baton': return 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      case 'cursif': return 'cursive, system-ui';
+      case 'script': return '"Comic Sans MS", "Comic Sans", cursive, system-ui';
+      case 'serif': return 'Georgia, "Times New Roman", serif';
+      default: return 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+    }
+  }
+  function loadNumber(key, fallback){ try { const v = localStorage.getItem(key); return v? Number(v)||fallback : fallback; } catch { return fallback; } }
+  function loadSettings(){
+    try {
+      const raw = localStorage.getItem('cp_settings');
+      return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+    } catch { return { ...DEFAULTS }; }
+  }
+  function saveSettings(s){
+    try { localStorage.setItem('cp_settings', JSON.stringify(s)); } catch {}
+  }
+
+  // --- tiny runtime checks
+  (function selfTests(){
+    try{
+      const round = makeScatterRound({ targetLetter:'A', distractorLetters:'BC', itemsCount:12, targetRatio:0.5, letterStyle:'baton' });
+      console.assert(Array.isArray(round) && round.length === 12, 'length 12');
+      console.assert(round.every(it => /^[A-Z]$/.test(it.char)), 'uppercase only');
+      const allow = new Set(('A' + 'BC').split(''));
+      console.assert(round.every(it => allow.has(it.char)), 'allowed set');
+      let ok=true; const minD = computeMinDistPercent(round.length)-1;
+      for(let i=0;i<round.length;i++){ for(let j=i+1;j<round.length;j++){ if(dist(round[i].x,round[i].y,round[j].x,round[j].y)<minD){ok=false;break;} } if(!ok)break;}
+      console.assert(ok,'no overlap approx');
+    }catch(e){ console.warn('Self-tests failed:', e); }
+  })();
+
+})();  
+</script>
+</body>
+</html>
