@@ -1,22 +1,13 @@
-{
-  "name": "app-cp",
-  "private": true,
-  "version": "0.0.1",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.45",
-    "tailwindcss": "^3.4.10",
-    "vite": "^5.4.0",
-    "@vitejs/plugin-react": "^4.3.0"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  }
-}
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App CP – Trouve la lettre</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/travail-matija/src/main.jsx"></script>
+  </body>
+</html>
+
