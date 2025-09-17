@@ -18,14 +18,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.x'   # <= évite les “not found”
+          check-latest: true
           cache: 'npm'
+
+      - name: Show Node version
+        run: node -v
 
       - name: Install deps
         run: npm ci || npm install
@@ -45,6 +48,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
