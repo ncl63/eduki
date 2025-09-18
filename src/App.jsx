@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-/* V1.1 – propre & robuste (JS pur)
-   - Playzone 70vh, lettres grosses
-   - Pas de consigne, juste la lettre cible géante
-   - Réglages persistants (localStorage)
-   - ⚙️ par exercice (Accueil + Jeu)
-   - MAJUSCULES uniquement
-   - Placement sans superposition
+/* V1.1.1 – UI ajustée (JS pur)
+   - Lettre cible alignée avec les boutons (barre du haut)
+   - Taille de la lettre cible conservée (clamp)
+   - Zone de jeu agrandie : hauteur = calc(100vh - marge fixe)
+   - Persistance des réglages du jeu lettres
+   - Placement sans superposition, MAJUSCULES uniquement
 */
 
 const STAR_GOAL = 10;
@@ -168,23 +167,33 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 items-center overflow-hidden">
-      <div className="w-full flex items-center gap-2">
-        <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">⬅️ Accueil</button>
-        <div className="flex-1" />
-        <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">⚙️</button>
+    <div className="flex flex-col gap-4 items-center overflow-hidden" style={{height: "calc(100vh - 140px)"}}>
+      {/* Barre du haut du jeu : boutons + lettre cible centrée */}
+      <div className="w-full grid grid-cols-3 items-center">
+        <div className="justify-self-start">
+          <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">⬅️ Accueil</button>
+        </div>
+
+        {/* Lettre cible AU MÊME NIVEAU que les boutons, taille inchangée */}
+        <div className="justify-self-center">
+          <div
+            className="font-bold leading-none"
+            style={{
+              fontSize: "clamp(48px, 12vw, 140px)",
+              fontFamily: fontForStyle(settings.letterStyle),
+            }}
+          >
+            {(settings.targetLetter || "U").toUpperCase()}
+          </div>
+        </div>
+
+        <div className="justify-self-end">
+          <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">⚙️</button>
+        </div>
       </div>
 
-      {/* Lettre cible géante */}
-      <div
-        className="font-bold leading-none"
-        style={{ fontSize: "clamp(48px, 12vw, 140px)", fontFamily: fontForStyle(settings.letterStyle) }}
-      >
-        {(settings.targetLetter || "U").toUpperCase()}
-      </div>
-
-      {/* Playzone agrandie */}
-      <div className="relative w-full max-w-6xl h-[70vh] bg-gray-50 rounded-3xl overflow-hidden border">
+      {/* Zone de jeu MAX : prend tout le reste de la hauteur disponible */}
+      <div className="relative w-full max-w-6xl flex-1 min-h-0 bg-gray-50 rounded-3xl overflow-hidden border">
         {cards.map((card) => (
           <button
             key={card.id}
@@ -263,7 +272,7 @@ function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {
     const y = randFloat(10, 90);
     const ok = accepted.every((p) => dist(p.x, p.y, x, y) >= minD);
     if (ok) accepted.push({ x, y });
-    if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1; // détend la contrainte si besoin
+    if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1; // détend un peu si besoin
   }
   while (accepted.length < n) accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
   return accepted;
