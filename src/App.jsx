@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-/* V1.1.1 – UI ajustée (JS pur)
-   - Lettre cible alignée avec les boutons (barre du haut)
-   - Taille de la lettre cible conservée (clamp)
-   - Zone de jeu agrandie : hauteur = calc(100vh - marge fixe)
-   - Persistance des réglages du jeu lettres
-   - Placement sans superposition, MAJUSCULES uniquement
+/* V1.1.2 – lettre collée en haut + zone de jeu max
+   - En écran "letters", on remplace l’en-tête par une barre ultra-compacte :
+     [⬅️] [LETTRE CIBLE GÉANTE] [⚙️]
+   - La zone de jeu occupe TOUT l’espace restant (flex-1, min-h-0)
+   - Persistance réglages + placement sans superposition (JS pur)
 */
 
 const STAR_GOAL = 10;
@@ -32,10 +31,19 @@ export default function App() {
   useEffect(() => saveJSON(LKEY, lettersSettings), [lettersSettings]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-white text-gray-900 overflow-hidden">
-      <Header stars={stars} onHome={() => setScreen("home")} />
+    <div className="min-h-screen w-full flex flex-col bg-white text-gray-900 overflow-hidden">
+      {screen === "letters" ? (
+        <GameHeader
+          letter={(lettersSettings.targetLetter || "U").toUpperCase()}
+          letterStyle={lettersSettings.letterStyle}
+          onBack={() => setScreen("home")}
+          onSettings={() => setScreen("letters-settings")}
+        />
+      ) : (
+        <HeaderDefault stars={stars} onHome={() => setScreen("home")} />
+      )}
 
-      <main className="w-full max-w-6xl flex-1 p-4 md:p-6 overflow-hidden">
+      <main className={screen === "letters" ? "flex-1 overflow-hidden p-2 md:p-3" : "flex-1 overflow-hidden p-4 md:p-6"}>
         {screen === "home" && (
           <Home
             onPlayLetters={() => setScreen("letters")}
@@ -46,9 +54,7 @@ export default function App() {
         {screen === "letters" && (
           <LettersGame
             settings={lettersSettings}
-            onSettings={() => setScreen("letters-settings")}
             onWin={() => setStars((s) => Math.min(STAR_GOAL, s + 1))}
-            onBack={() => setScreen("home")}
           />
         )}
 
@@ -64,8 +70,8 @@ export default function App() {
   );
 }
 
-/* -------- UI de base -------- */
-function Header({ stars, onHome }) {
+/* -------- Headers -------- */
+function HeaderDefault({ stars, onHome }) {
   const pct = Math.min(100, Math.round((stars / STAR_GOAL) * 100));
   return (
     <div className="w-full border-b sticky top-0 bg-white/80 backdrop-blur z-10">
@@ -76,13 +82,7 @@ function Header({ stars, onHome }) {
         <div className="flex-1" />
         <div className="flex items-center gap-2 w-48" aria-label="Jauge d’étoiles">
           <span className="text-xl">⭐</span>
-          <div
-            className="h-3 flex-1 bg-gray-200 rounded-full overflow-hidden"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={STAR_GOAL}
-            aria-valuenow={stars}
-          >
+          <div className="h-3 flex-1 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={STAR_GOAL} aria-valuenow={stars}>
             <div className="h-full bg-yellow-400" style={{ width: pct + "%" }} />
           </div>
           <span className="text-sm w-10 text-right">{stars}/{STAR_GOAL}</span>
@@ -92,9 +92,29 @@ function Header({ stars, onHome }) {
   );
 }
 
+function GameHeader({ letter, letterStyle, onBack, onSettings }) {
+  // Barre minimaliste pour libérer au max la hauteur pour le jeu
+  return (
+    <div className="w-full border-b sticky top-0 bg-white/90 backdrop-blur z-20">
+      <div className="max-w-6xl mx-auto grid grid-cols-3 items-center p-2">
+        <div className="justify-self-start">
+          <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">⬅️ Accueil</button>
+        </div>
+        <div className="justify-self-center leading-none select-none" style={{ fontSize: "clamp(48px, 12vw, 140px)", fontFamily: fontForStyle(letterStyle) }}>
+          {letter}
+        </div>
+        <div className="justify-self-end">
+          <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">⚙️</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------- Accueil -------- */
 function Home({ onPlayLetters, onOpenLettersSettings }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="relative">
         <button
           onClick={onOpenLettersSettings}
@@ -130,7 +150,7 @@ function BigCard({ icon, title, subtitle, onClick }) {
 }
 
 /* -------- Jeu "Trouve la lettre" -------- */
-function LettersGame({ settings, onWin, onBack, onSettings }) {
+function LettersGame({ settings, onWin }) {
   const [cards, setCards] = useState(() => makeScatterRound(settings));
   const [feedback, setFeedback] = useState(null);
 
@@ -166,34 +186,11 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
     });
   }
 
+  // Conteneur = prend toute la hauteur restante sous la barre (header)
   return (
-    <div className="flex flex-col gap-4 items-center overflow-hidden" style={{height: "calc(100vh - 140px)"}}>
-      {/* Barre du haut du jeu : boutons + lettre cible centrée */}
-      <div className="w-full grid grid-cols-3 items-center">
-        <div className="justify-self-start">
-          <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">⬅️ Accueil</button>
-        </div>
-
-        {/* Lettre cible AU MÊME NIVEAU que les boutons, taille inchangée */}
-        <div className="justify-self-center">
-          <div
-            className="font-bold leading-none"
-            style={{
-              fontSize: "clamp(48px, 12vw, 140px)",
-              fontFamily: fontForStyle(settings.letterStyle),
-            }}
-          >
-            {(settings.targetLetter || "U").toUpperCase()}
-          </div>
-        </div>
-
-        <div className="justify-self-end">
-          <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">⚙️</button>
-        </div>
-      </div>
-
-      {/* Zone de jeu MAX : prend tout le reste de la hauteur disponible */}
-      <div className="relative w-full max-w-6xl flex-1 min-h-0 bg-gray-50 rounded-3xl overflow-hidden border">
+    <div className="max-w-6xl mx-auto flex flex-col gap-3 items-center overflow-hidden flex-1 min-h-0">
+      {/* Zone de jeu = flex-1, prend tout l’espace vertical dispo */}
+      <div className="relative w-full flex-1 min-h-0 bg-gray-50 rounded-3xl overflow-hidden border">
         {cards.map((card) => (
           <button
             key={card.id}
@@ -272,7 +269,7 @@ function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {
     const y = randFloat(10, 90);
     const ok = accepted.every((p) => dist(p.x, p.y, x, y) >= minD);
     if (ok) accepted.push({ x, y });
-    if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1; // détend un peu si besoin
+    if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1;
   }
   while (accepted.length < n) accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
   return accepted;
@@ -379,7 +376,7 @@ function LettersSettings({ settings, onChange, onBack }) {
   );
 }
 
-/* -------- Helpers sûrs -------- */
+/* -------- Helpers -------- */
 function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function clampInt(n, a, b) { return Math.max(a, Math.min(b, Math.round(n || 0))); }
 function clampRatio(r) { const n = Number(r); const val = Number.isFinite(n) ? n : 0.45; return Math.max(0.1, Math.min(0.9, val)); }
