@@ -1,85 +1,77 @@
 import React, { useEffect, useState } from "react";
 
-/**
- * Version validée : Accueil → Jeu (dispersé, sans superposition) → Mode enseignant
- * - Lettres en MAJUSCULE uniquement
- * - Pas de scroll (zone fixe adaptée iPad)
- * - Réglages : lettre cible + lettres distractrices + items + ratio + style
- */
-
-const DEFAULT_SETTINGS = {
-  dyslexicFont: false,
-  highContrast: true,
-  targetLetter: "U",
-  letterStyle: "baton", // baton | cursif | script | serif
-  itemsCount: 14,
-  targetRatio: 0.4,
-  distractorLetters: "ABCDE",
-};
+/* V1.1
+ * 1) Playzone agrandie (~70vh), lettres + grosses
+ * 2) Plus de consigne texte, seulement la lettre cible géante
+ * 3) Persistance par exercice (localStorage: settings_letters_v1)
+ * 4) Plus de mode enseignant global : ⚙️ dédié sur la carte du jeu et dans le jeu
+*/
 
 const STAR_GOAL = 10;
+const LKEY = "settings_letters_v1";
+
+const DEFAULT_LETTERS = {
+  targetLetter: "U",
+  distractorLetters: "ABCDE",
+  itemsCount: 16,
+  targetRatio: 0.45,
+  letterStyle: "baton", // baton | cursif | script | serif
+};
 
 export default function App() {
-  const [screen, setScreen] = useState("home"); // "home" | "letters" | "teacher"
+  const [screen, setScreen] = useState("home"); // home | letters | letters-settings
   const [stars, setStars] = useState(() => loadInt("cp_mvp_stars", 0));
-  const [settings, setSettings] = useState(() => {
-    const saved = loadJSON("cp_mvp_settings");
-    return saved ? { ...DEFAULT_SETTINGS, ...saved } : DEFAULT_SETTINGS;
+  const [lettersSettings, setLettersSettings] = useState(() => {
+    const saved = loadJSON(LKEY);
+    return saved ? { ...DEFAULT_LETTERS, ...saved } : DEFAULT_LETTERS;
   });
 
-  useEffect(() => saveJSON("cp_mvp_settings", settings), [settings]);
   useEffect(() => saveStr("cp_mvp_stars", String(stars)), [stars]);
+  useEffect(() => saveJSON(LKEY, lettersSettings), [lettersSettings]);
 
   return (
-    <div
-      className={
-        "min-h-screen w-full flex flex-col items-center bg-white overflow-hidden " +
-        (settings.highContrast ? "text-gray-900" : "text-gray-800")
-      }
-      style={{ fontFamily: settings.dyslexicFont ? "system-ui, -apple-system, Segoe UI, Roboto, sans-serif" : undefined }}
-    >
+    <div className="min-h-screen w-full flex flex-col items-center bg-white text-gray-900 overflow-hidden">
       <Header
         stars={stars}
         onHome={() => setScreen("home")}
-        onOpenTeacher={() => setScreen("teacher")}
       />
 
-      <main className="w-full max-w-5xl flex-1 p-4 md:p-6 overflow-hidden">
-        {screen === "home" && <Home onChoose={setScreen} />}
+      <main className="w-full max-w-6xl flex-1 p-4 md:p-6 overflow-hidden">
+        {screen === "home" && (
+          <Home
+            onPlayLetters={() => setScreen("letters")}
+            onOpenLettersSettings={() => setScreen("letters-settings")}
+          />
+        )}
+
         {screen === "letters" && (
           <LettersGame
-            settings={settings}
+            settings={lettersSettings}
+            onSettings={() => setScreen("letters-settings")}
             onWin={() => setStars((s) => Math.min(STAR_GOAL, s + 1))}
             onBack={() => setScreen("home")}
           />
         )}
-        {screen === "teacher" && (
-          <Teacher
-            settings={settings}
-            onChange={setSettings}
-            onBack={() => setScreen("home")}
+
+        {screen === "letters-settings" && (
+          <LettersSettings
+            settings={lettersSettings}
+            onChange={setLettersSettings}
+            onBack={() => setScreen("letters")}
           />
         )}
       </main>
 
-      <Footer
-        highContrast={settings.highContrast}
-        onToggleContrast={() =>
-          setSettings((s) => ({ ...s, highContrast: !s.highContrast }))
-        }
-        onToggleDys={() =>
-          setSettings((s) => ({ ...s, dyslexicFont: !s.dyslexicFont }))
-        }
-      />
+      <Footer />
     </div>
   );
 }
 
-function Header({ stars, onHome, onOpenTeacher }) {
+function Header({ stars, onHome }) {
   const pct = Math.min(100, Math.round((stars / STAR_GOAL) * 100));
   return (
     <div className="w-full border-b sticky top-0 bg-white/80 backdrop-blur z-10">
-      <div className="max-w-5xl mx-auto flex items-center gap-3 p-3">
+      <div className="max-w-6xl mx-auto flex items-center gap-3 p-3">
         <button onClick={onHome} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg">
           🏠 Accueil
         </button>
@@ -97,39 +89,38 @@ function Header({ stars, onHome, onOpenTeacher }) {
           </div>
           <span className="text-sm w-10 text-right">{stars}/{STAR_GOAL}</span>
         </div>
-        <button
-          onClick={onOpenTeacher}
-          className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg"
-          aria-label="Mode enseignant"
-        >
-          🔧
-        </button>
       </div>
     </div>
   );
 }
 
-function Home({ onChoose }) {
+function Home({ onPlayLetters, onOpenLettersSettings }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <BigCard
-        icon="🔎"
-        title="Trouve la lettre"
-        subtitle="Clique sur tous les exemplaires"
-        onClick={() => onChoose("letters")}
-      />
-      <BigCard
-        icon="🔧"
-        title="Mode enseignant"
-        subtitle="Régler l’app (lettres, style, etc.)"
-        onClick={() => onChoose("teacher")}
-      />
+      <div className="relative">
+        <button
+          onClick={onOpenLettersSettings}
+          className="absolute top-3 right-3 px-2 py-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-lg"
+          aria-label="Réglages du jeu lettres"
+        >
+          ⚙️
+        </button>
+        <BigCard
+          icon="🔎"
+          title="Trouve la lettre"
+          subtitle="Clique sur tous les exemplaires"
+          onClick={onPlayLetters}
+        />
+      </div>
       <BigCard
         icon="✨"
         title="À venir"
         subtitle="Autres jeux"
         onClick={() => {}}
       />
+      <div className="rounded-3xl p-6 md:p-8 bg-gray-50 text-gray-400 border text-left">
+        Espace libre
+      </div>
     </div>
   );
 }
@@ -138,7 +129,7 @@ function BigCard({ icon, title, subtitle, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="rounded-3xl p-6 md:p-8 bg-gray-50 hover:bg-gray-100 shadow-sm text-left focus:outline-none focus:ring-4 ring-blue-300"
+      className="w-full rounded-3xl p-6 md:p-8 bg-gray-50 hover:bg-gray-100 shadow-sm text-left focus:outline-none focus:ring-4 ring-blue-300 border"
     >
       <div className="text-5xl mb-4">{icon}</div>
       <div className="text-2xl font-semibold mb-1">{title}</div>
@@ -147,8 +138,8 @@ function BigCard({ icon, title, subtitle, onClick }) {
   );
 }
 
-// ---------- Jeu "Trouve la lettre" ----------
-function LettersGame({ settings, onWin, onBack }) {
+/* -------- Jeu "Trouve la lettre" -------- */
+function LettersGame({ settings, onWin, onBack, onSettings }) {
   const [cards, setCards] = useState(() => makeScatterRound(settings));
   const [feedback, setFeedback] = useState(null);
 
@@ -187,22 +178,31 @@ function LettersGame({ settings, onWin, onBack }) {
         <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200">
           ⬅️ Accueil
         </button>
-        <div className="ml-auto text-sm text-gray-600">
-          Cible : <strong>{settings.targetLetter}</strong>
-        </div>
+        <div className="flex-1" />
+        <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">
+          ⚙️
+        </button>
       </div>
 
-      <div className="text-2xl md:text-3xl font-semibold">
-        Clique sur tous les <span className="text-blue-600">{settings.targetLetter}</span>
+      {/* Lettre cible géante, sans consigne texte */}
+      <div
+        className="font-bold leading-none"
+        style={{
+          fontSize: "clamp(48px, 12vw, 140px)",
+          fontFamily: fontForStyle(settings.letterStyle),
+        }}
+      >
+        {settings.targetLetter}
       </div>
 
-      <div className="relative w-full max-w-5xl h-[520px] md:h-[560px] bg-gray-50 rounded-3xl overflow-hidden border">
+      {/* Playzone plus grande (70vh), sans scroll */}
+      <div className="relative w-full max-w-6xl h-[70vh] bg-gray-50 rounded-3xl overflow-hidden border">
         {cards.map((card) => (
           <button
             key={card.id}
             onClick={() => onCardClick(card.id)}
             className={
-              "absolute select-none rounded-2xl border-2 p-4 md:p-6 text-4xl md:text-5xl font-bold shadow-sm transition-colors " +
+              "absolute select-none rounded-2xl border-2 font-bold shadow-sm transition-colors " +
               (card.state === "locked" && card.result === "good"
                 ? "bg-green-200 border-green-400"
                 : card.state === "locked" && card.result === "bad"
@@ -214,6 +214,10 @@ function LettersGame({ settings, onWin, onBack }) {
               top: card.y + "%",
               transform: "translate(-50%, -50%)",
               fontFamily: fontForStyle(settings.letterStyle),
+              fontSize: "clamp(36px, 6vw, 80px)",
+              padding: "18px 22px",
+              minWidth: "68px",
+              minHeight: "68px",
             }}
             aria-label={card.char}
           >
@@ -231,9 +235,9 @@ function LettersGame({ settings, onWin, onBack }) {
   );
 }
 
-// placement sans superposition (adapté au nombre d'items)
+/* Placement sans superposition, adapté au nombre d'items */
 function makeScatterRound(settings) {
-  const total = clampInt(settings.itemsCount, 8, 24);
+  const total = clampInt(settings.itemsCount, 8, 30);
   const targetCount = Math.max(1, Math.round(total * clampRatio(settings.targetRatio)));
   let distractorCount = total - targetCount;
 
@@ -275,34 +279,33 @@ function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {
   let minD = minDistPercent;
   while (accepted.length < n && attempts < maxAttempts) {
     attempts++;
-    const x = randFloat(10, 90);
-    const y = randFloat(12, 88);
+    const x = randFloat(8, 92);
+    const y = randFloat(10, 90);
     const ok = accepted.every((p) => dist(p.x, p.y, x, y) >= minD);
     if (ok) accepted.push({ x, y });
     if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1;
   }
   while (accepted.length < n) {
-    accepted.push({ x: randFloat(15, 85), y: randFloat(18, 82) });
+    accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
   }
   return accepted;
 }
 
-// ---------- Mode enseignant ----------
-function Teacher({ settings, onChange, onBack }) {
-  const [targetLetter, setTargetLetter] = useState(settings.targetLetter || "U");
-  const [distractorLetters, setDistractorLetters] = useState(settings.distractorLetters || "ABCDE");
-  const [letterStyle, setLetterStyle] = useState(settings.letterStyle || "baton");
-  const [itemsCount, setItemsCount] = useState(settings.itemsCount || 14);
-  const [targetRatio, setTargetRatio] = useState(settings.targetRatio || 0.4);
+/* -------- Réglages du jeu lettres (seulement cet exercice) -------- */
+function LettersSettings({ settings, onChange, onBack }) {
+  const [targetLetter, setTargetLetter] = useState(settings.targetLetter);
+  const [distractorLetters, setDistractorLetters] = useState(settings.distractorLetters);
+  const [letterStyle, setLetterStyle] = useState(settings.letterStyle);
+  const [itemsCount, setItemsCount] = useState(settings.itemsCount);
+  const [targetRatio, setTargetRatio] = useState(settings.targetRatio);
 
   function save() {
     onChange({
-      ...settings,
       targetLetter: (targetLetter || "U").slice(0, 1).toUpperCase(),
       distractorLetters: (distractorLetters || "").toUpperCase().replace(/[^A-Z]/g, ""),
       letterStyle,
-      itemsCount: Math.max(8, Math.min(24, itemsCount || 14)),
-      targetRatio: Math.max(0.1, Math.min(0.9, Number(targetRatio) || 0.4)),
+      itemsCount: clampInt(itemsCount || 16, 8, 30),
+      targetRatio: clampRatio(targetRatio || 0.45),
     });
     onBack();
   }
@@ -310,10 +313,8 @@ function Teacher({ settings, onChange, onBack }) {
   return (
     <div className="max-w-3xl mx-auto bg-white border rounded-3xl p-6 shadow-sm space-y-6">
       <div className="flex items-center gap-2">
-        <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg">
-          ⬅️
-        </button>
-        <h2 className="text-2xl font-bold">Réglages enseignant</h2>
+        <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg">⬅️</button>
+        <h2 className="text-2xl font-bold">Réglages — Trouve la lettre</h2>
       </div>
 
       <section className="space-y-3">
@@ -327,14 +328,16 @@ function Teacher({ settings, onChange, onBack }) {
             maxLength={1}
           />
         </label>
+
         <label className="grid gap-1">
           <span className="text-sm">Lettres distractrices</span>
           <input
             value={distractorLetters}
             onChange={(e) => setDistractorLetters(e.target.value)}
             className="rounded-2xl border p-3 w-full text-xl"
+            placeholder="Ex : BPRT"
           />
-          <span className="text-xs text-gray-500">Exemples : ABCD ou BPRT (lettres autorisées en plus de la cible).</span>
+          <span className="text-xs text-gray-500">Majuscules uniquement. Laisse vide pour aucune lettre supplémentaire.</span>
         </label>
       </section>
 
@@ -361,9 +364,9 @@ function Teacher({ settings, onChange, onBack }) {
           <input
             type="number"
             min={8}
-            max={24}
+            max={30}
             value={itemsCount}
-            onChange={(e) => setItemsCount(parseInt(e.target.value || "14", 10))}
+            onChange={(e) => setItemsCount(parseInt(e.target.value || "16", 10))}
             className="rounded-2xl border p-3"
           />
         </label>
@@ -371,11 +374,11 @@ function Teacher({ settings, onChange, onBack }) {
           <span className="text-sm">Proportion bonnes lettres</span>
           <input
             type="number"
-            step={0.1}
+            step={0.05}
             min={0.1}
             max={0.9}
             value={targetRatio}
-            onChange={(e) => setTargetRatio(parseFloat(e.target.value || "0.4"))}
+            onChange={(e) => setTargetRatio(parseFloat(e.target.value || "0.45"))}
             className="rounded-2xl border p-3"
           />
         </label>
@@ -390,27 +393,10 @@ function Teacher({ settings, onChange, onBack }) {
   );
 }
 
-function Footer({ highContrast, onToggleContrast, onToggleDys }) {
-  return (
-    <footer className="w-full border-t bg-white/70">
-      <div className="max-w-5xl mx-auto p-3 flex items-center gap-3 text-sm text-gray-600">
-        <span>Astuce : sur iPad, ajoute à l’écran d’accueil pour le plein écran.</span>
-        <div className="flex-1" />
-        <button onClick={onToggleContrast} className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-gray-200">
-          {highContrast ? "Contraste ++" : "Contraste +"}
-        </button>
-        <button onClick={onToggleDys} className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-gray-200">
-          Police
-        </button>
-      </div>
-    </footer>
-  );
-}
-
-// ---------- Helpers ----------
+/* Helpers */
 function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function clampInt(n, a, b) { return Math.max(a, Math.min(b, Math.round(n || 0))); }
-function clampRatio(r) { const n = Number(r); const val = Number.isFinite(n) ? n : 0.4; return Math.max(0.1, Math.min(0.9, val)); }
+function clampRatio(r) { const n = Number(r); const val = Number.isFinite(n) ? n : 0.45; return Math.max(0.1, Math.min(0.9, val)); }
 function randFloat(min, max) { return Math.random() * (max - min) + min; }
 function dist(x1, y1, x2, y2) { const dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx*dx + dy*dy); }
 function fontForStyle(style) {
