@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 
 /**
- * APP CP – Jeu « Trouve la lettre » (V1 STABLE)
- * - Affiche des lettres dispersées (pas de superposition)
- * - L’enfant clique sur tous les exemplaires de la lettre cible
- * - Vert si juste, rouge si faux
- * - Mode enseignant pour choisir lettre cible, style d’écriture, nombre d’éléments
+ * APP CP – Jeu « Trouve la lettre » (V1 STABLE JS)
+ * - Lettres dispersées (pas de superposition)
+ * - Clic vert/rouge, victoire quand toutes les cibles sont trouvées
+ * - Mode enseignant : lettre cible, style, nombre d’éléments
  */
-
-type Screen = "home" | "letters" | "teacher";
 
 const DEFAULT_SETTINGS = {
   dyslexicFont: false,
@@ -23,7 +20,7 @@ const DEFAULT_SETTINGS = {
 const STAR_GOAL = 10;
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("home");
+  const [screen, setScreen] = useState("home"); // "home" | "letters" | "teacher"
   const [stars, setStars] = useState(0);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
@@ -66,9 +63,7 @@ function Header({ stars, onHome, onOpenTeacher }) {
         🏠 Accueil
       </button>
       <div className="flex-1" />
-      <div className="flex items-center gap-2">
-        ⭐ {stars}/{STAR_GOAL}
-      </div>
+      <div className="flex items-center gap-2">⭐ {stars}/{STAR_GOAL}</div>
       <button
         onClick={onOpenTeacher}
         className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200"
@@ -114,14 +109,14 @@ function BigCard({ icon, title, subtitle, onClick }) {
 // ---------- Letters Game ----------
 function LettersGame({ settings, onWin, onBack }) {
   const [cards, setCards] = useState(() => makeScatterRound(settings));
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     setCards(makeScatterRound(settings));
   }, [settings]);
 
-  function onCardClick(id: number) {
-    setCards((cs: any[]) => {
+  function onCardClick(id) {
+    setCards((cs) => {
       const copy = cs.map((c) => ({ ...c }));
       const idx = copy.findIndex((c) => c.id === id);
       if (idx === -1 || copy[idx].state === "locked") return copy;
@@ -129,9 +124,7 @@ function LettersGame({ settings, onWin, onBack }) {
       copy[idx].state = "locked";
       copy[idx].result = ok ? "good" : "bad";
 
-      const remaining = copy.filter(
-        (c) => c.isTarget && c.state !== "locked"
-      ).length;
+      const remaining = copy.filter((c) => c.isTarget && c.state !== "locked").length;
       if (ok && remaining === 0) {
         setFeedback("Bravo ! ⭐");
         onWin();
@@ -158,8 +151,7 @@ function LettersGame({ settings, onWin, onBack }) {
       <div className="text-xl">
         Clique sur tous les{" "}
         <span className="text-blue-600">
-          {settings.targetLetter.toUpperCase()} /{" "}
-          {settings.targetLetter.toLowerCase()}
+          {settings.targetLetter.toUpperCase()} / {settings.targetLetter.toLowerCase()}
         </span>
       </div>
       <div className="relative w-full max-w-4xl h-[480px] bg-gray-50 rounded-3xl overflow-hidden border">
@@ -197,13 +189,13 @@ function makeScatterRound(settings) {
   const distractorCount = total - targetCount;
 
   const target = settings.targetLetter;
-  const targets: string[] = [target.toUpperCase(), target.toLowerCase()];
+  const targets = [target.toUpperCase(), target.toLowerCase()];
 
   const pool = settings.letterPool.filter(
-    (l: string) =>
-      !targets.includes(l.toUpperCase()) && !targets.includes(l.toLowerCase())
+    (l) => !targets.includes(l.toUpperCase()) && !targets.includes(l.toLowerCase())
   );
-  const distractors: string[] = [];
+
+  const distractors = [];
   for (let i = 0; i < distractorCount; i++) distractors.push(randomPick(pool));
 
   const chars = [
@@ -211,25 +203,16 @@ function makeScatterRound(settings) {
     ...distractors,
   ];
 
-  const placed: any[] = [];
+  const placed = [];
   let id = 1;
   for (const ch of chars) {
-    let x = 0,
-      y = 0,
-      tries = 0;
+    let x = 0, y = 0, tries = 0;
     do {
       x = randFloat(10, 90);
       y = randFloat(10, 90);
       tries++;
     } while (tries < 40 && placed.some((p) => dist(p.x, p.y, x, y) < 12));
-    placed.push({
-      id: id++,
-      char: ch,
-      x,
-      y,
-      isTarget: targets.includes(ch),
-      state: "idle",
-    });
+    placed.push({ id: id++, char: ch, x, y, isTarget: targets.includes(ch), state: "idle" });
   }
   return placed;
 }
@@ -286,17 +269,12 @@ function Teacher({ settings, onChange, onBack }) {
           min={8}
           max={20}
           value={itemsCount}
-          onChange={(e) =>
-            setItemsCount(parseInt(e.target.value || "14", 10))
-          }
+          onChange={(e) => setItemsCount(parseInt(e.target.value || "14", 10))}
           className="rounded-2xl border p-3 w-24"
         />
       </label>
 
-      <button
-        onClick={save}
-        className="px-4 py-3 rounded-2xl bg-blue-600 text-white"
-      >
+      <button onClick={save} className="px-4 py-3 rounded-2xl bg-blue-600 text-white">
         Enregistrer
       </button>
     </div>
@@ -304,31 +282,16 @@ function Teacher({ settings, onChange, onBack }) {
 }
 
 // ---------- Helpers ----------
-function randomPick(arr: any[]) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-function clampInt(n: number, a: number, b: number) {
-  return Math.max(a, Math.min(b, Math.round(n || 0)));
-}
-function randFloat(min: number, max: number) {
-  return Math.random() * (max - min) + min;
-}
-function dist(x1: number, y1: number, x2: number, y2: number) {
-  const dx = x1 - x2,
-    dy = y1 - y2;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-function fontForStyle(style: string) {
+function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function clampInt(n, a, b) { return Math.max(a, Math.min(b, Math.round(n || 0))); }
+function randFloat(min, max) { return Math.random() * (max - min) + min; }
+function dist(x1, y1, x2, y2) { const dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx*dx + dy*dy); }
+function fontForStyle(style) {
   switch (style) {
-    case "baton":
-      return "system-ui, sans-serif";
-    case "cursif":
-      return "cursive";
-    case "script":
-      return '"Comic Sans MS", cursive';
-    case "serif":
-      return "Georgia, serif";
-    default:
-      return "system-ui, sans-serif";
+    case "baton": return "system-ui, sans-serif";
+    case "cursif": return "cursive";
+    case "script": return '"Comic Sans MS", cursive';
+    case "serif": return "Georgia, serif";
+    default: return "system-ui, sans-serif";
   }
 }
