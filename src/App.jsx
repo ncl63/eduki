@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-/* V1.1
- * 1) Playzone agrandie (~70vh), lettres + grosses
- * 2) Plus de consigne texte, seulement la lettre cible géante
- * 3) Persistance par exercice (localStorage: settings_letters_v1)
- * 4) Plus de mode enseignant global : ⚙️ dédié sur la carte du jeu et dans le jeu
+/* V1.1 safe
+   - Playzone plus grande
+   - Lettre cible géante (pas de consigne texte)
+   - Réglages persistants (localStorage)
+   - ⚙️ propre au jeu sur Accueil et dans le jeu
 */
 
 const STAR_GOAL = 10;
@@ -15,7 +15,7 @@ const DEFAULT_LETTERS = {
   distractorLetters: "ABCDE",
   itemsCount: 16,
   targetRatio: 0.45,
-  letterStyle: "baton", // baton | cursif | script | serif
+  letterStyle: "baton", // baton|cursif|script|serif
 };
 
 export default function App() {
@@ -23,7 +23,7 @@ export default function App() {
   const [stars, setStars] = useState(() => loadInt("cp_mvp_stars", 0));
   const [lettersSettings, setLettersSettings] = useState(() => {
     const saved = loadJSON(LKEY);
-    return saved ? { ...DEFAULT_LETTERS, ...saved } : DEFAULT_LETTERS;
+    return saved ? { ...DEFAULT_LETTERS, ...saved } : { ...DEFAULT_LETTERS };
   });
 
   useEffect(() => saveStr("cp_mvp_stars", String(stars)), [stars]);
@@ -31,10 +31,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-white text-gray-900 overflow-hidden">
-      <Header
-        stars={stars}
-        onHome={() => setScreen("home")}
-      />
+      <Header stars={stars} onHome={() => setScreen("home")} />
 
       <main className="w-full max-w-6xl flex-1 p-4 md:p-6 overflow-hidden">
         {screen === "home" && (
@@ -87,7 +84,9 @@ function Header({ stars, onHome }) {
           >
             <div className="h-full bg-yellow-400" style={{ width: pct + "%" }} />
           </div>
-          <span className="text-sm w-10 text-right">{stars}/{STAR_GOAL}</span>
+          <span className="text-sm w-10 text-right">
+            {stars}/{STAR_GOAL}
+          </span>
         </div>
       </div>
     </div>
@@ -112,12 +111,8 @@ function Home({ onPlayLetters, onOpenLettersSettings }) {
           onClick={onPlayLetters}
         />
       </div>
-      <BigCard
-        icon="✨"
-        title="À venir"
-        subtitle="Autres jeux"
-        onClick={() => {}}
-      />
+
+      <BigCard icon="✨" title="À venir" subtitle="Autres jeux" onClick={() => {}} />
       <div className="rounded-3xl p-6 md:p-8 bg-gray-50 text-gray-400 border text-left">
         Espace libre
       </div>
@@ -145,7 +140,13 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
 
   useEffect(() => {
     setCards(makeScatterRound(settings));
-  }, [settings.targetLetter, settings.letterStyle, settings.itemsCount, settings.targetRatio, settings.distractorLetters]);
+  }, [
+    settings.targetLetter,
+    settings.letterStyle,
+    settings.itemsCount,
+    settings.targetRatio,
+    settings.distractorLetters,
+  ]);
 
   function onCardClick(id) {
     setCards((cs) => {
@@ -179,12 +180,16 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
           ⬅️ Accueil
         </button>
         <div className="flex-1" />
-        <button onClick={onSettings} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200" aria-label="Réglages">
+        <button
+          onClick={onSettings}
+          className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200"
+          aria-label="Réglages"
+        >
           ⚙️
         </button>
       </div>
 
-      {/* Lettre cible géante, sans consigne texte */}
+      {/* Lettre cible géante */}
       <div
         className="font-bold leading-none"
         style={{
@@ -195,7 +200,7 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
         {settings.targetLetter}
       </div>
 
-      {/* Playzone plus grande (70vh), sans scroll */}
+      {/* Playzone agrandie */}
       <div className="relative w-full max-w-6xl h-[70vh] bg-gray-50 rounded-3xl overflow-hidden border">
         {cards.map((card) => (
           <button
@@ -235,7 +240,7 @@ function LettersGame({ settings, onWin, onBack, onSettings }) {
   );
 }
 
-/* Placement sans superposition, adapté au nombre d'items */
+/* Placement sans superposition */
 function makeScatterRound(settings) {
   const total = clampInt(settings.itemsCount, 8, 30);
   const targetCount = Math.max(1, Math.round(total * clampRatio(settings.targetRatio)));
@@ -263,7 +268,14 @@ function makeScatterRound(settings) {
   for (let i = 0; i < chars.length; i++) {
     const { x, y } = points[i];
     const ch = chars[i];
-    placed.push({ id: id++, char: ch.toUpperCase(), x, y, isTarget: ch === target, state: "idle" });
+    placed.push({
+      id: id++,
+      char: (ch || "").toUpperCase(),
+      x,
+      y,
+      isTarget: ch === target,
+      state: "idle",
+    });
   }
   return placed;
 }
@@ -285,13 +297,11 @@ function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {
     if (ok) accepted.push({ x, y });
     if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1;
   }
-  while (accepted.length < n) {
-    accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
-  }
+  while (accepted.length < n) accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
   return accepted;
 }
 
-/* -------- Réglages du jeu lettres (seulement cet exercice) -------- */
+/* Réglages dédiés au jeu lettres */
 function LettersSettings({ settings, onChange, onBack }) {
   const [targetLetter, setTargetLetter] = useState(settings.targetLetter);
   const [distractorLetters, setDistractorLetters] = useState(settings.distractorLetters);
@@ -313,7 +323,9 @@ function LettersSettings({ settings, onChange, onBack }) {
   return (
     <div className="max-w-3xl mx-auto bg-white border rounded-3xl p-6 shadow-sm space-y-6">
       <div className="flex items-center gap-2">
-        <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg">⬅️</button>
+        <button onClick={onBack} className="px-3 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-lg">
+          ⬅️
+        </button>
         <h2 className="text-2xl font-bold">Réglages — Trouve la lettre</h2>
       </div>
 
@@ -328,7 +340,6 @@ function LettersSettings({ settings, onChange, onBack }) {
             maxLength={1}
           />
         </label>
-
         <label className="grid gap-1">
           <span className="text-sm">Lettres distractrices</span>
           <input
@@ -337,7 +348,7 @@ function LettersSettings({ settings, onChange, onBack }) {
             className="rounded-2xl border p-3 w-full text-xl"
             placeholder="Ex : BPRT"
           />
-          <span className="text-xs text-gray-500">Majuscules uniquement. Laisse vide pour aucune lettre supplémentaire.</span>
+          <span className="text-xs text-gray-500">Majuscules uniquement.</span>
         </label>
       </section>
 
@@ -393,7 +404,7 @@ function LettersSettings({ settings, onChange, onBack }) {
   );
 }
 
-/* Helpers */
+/* Helpers sûrs */
 function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function clampInt(n, a, b) { return Math.max(a, Math.min(b, Math.round(n || 0))); }
 function clampRatio(r) { const n = Number(r); const val = Number.isFinite(n) ? n : 0.45; return Math.max(0.1, Math.min(0.9, val)); }
@@ -412,3 +423,18 @@ function loadJSON(key){ try{ const v = localStorage.getItem(key); return v ? JSO
 function loadInt(key, d){ try{ const v = localStorage.getItem(key); return v ? parseInt(v,10)||d : d; }catch{ return d; } }
 function saveJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch{} }
 function saveStr(key, val){ try{ localStorage.setItem(key, String(val)); }catch{} }
+function placePointsNoOverlap(n, { minDistPercent = 18, maxAttempts = 8000 } = {}) {
+  const accepted = [];
+  let attempts = 0;
+  let minD = minDistPercent;
+  while (accepted.length < n && attempts < maxAttempts) {
+    attempts++;
+    const x = randFloat(8, 92);
+    const y = randFloat(10, 90);
+    const ok = accepted.every((p) => dist(p.x, p.y, x, y) >= minD);
+    if (ok) accepted.push({ x, y });
+    if (attempts % 1000 === 0 && accepted.length < n && minD > 12) minD -= 1;
+  }
+  while (accepted.length < n) accepted.push({ x: randFloat(12, 88), y: randFloat(14, 86) });
+  return accepted;
+}
