@@ -7,6 +7,19 @@
   </head>
   <body>
     <div id="root"></div>
+    
+    <script>
+  window.onerror = function (msg, src, line, col, err) {
+    const box = document.createElement('pre');
+    box.style.whiteSpace = 'pre-wrap';
+    box.style.padding = '12px';
+    box.style.border = '1px solid #ddd';
+    box.style.background = '#fffbe6';
+    box.textContent = 'JS Error: ' + msg + '\n' + (err && err.stack || '');
+    document.body.prepend(box);
+  };
+  console.log('BOOT: index.html chargé');
+</script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
