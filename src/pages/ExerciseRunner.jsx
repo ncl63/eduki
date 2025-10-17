@@ -2,9 +2,11 @@ import React from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getExerciseById } from '../data/exercises.js'
 import LetterFind from '../exercises/LetterFind.jsx'
+import FeedingExercise from '../exercises/FeedingExercise.jsx'
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,
+  feeding: FeedingExercise,
 }
 
 export default function ExerciseRunner() {
@@ -24,4 +26,3 @@ export default function ExerciseRunner() {
 
   return <Component meta={meta} />
 }
-
