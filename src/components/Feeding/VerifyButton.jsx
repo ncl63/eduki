@@ -41,7 +41,7 @@ export default function VerifyButton({
   return (
     <button
       type="button"
-      className="flex items-center justify-center gap-3 rounded-xl px-4 py-3 bg-gray-900 text-white text-lg font-semibold shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 active:scale-[0.99] transition disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex min-h-[56px] items-center justify-center gap-3 rounded-xl px-6 py-3.5 bg-gray-900 text-white text-lg font-semibold shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 active:scale-[0.99] transition disabled:opacity-50 disabled:cursor-not-allowed"
       onClick={onClick}
       disabled={disabled}
       aria-label="Vérifier la mangeoire"
@@ -51,4 +51,3 @@ export default function VerifyButton({
     </button>
   )
 }
-

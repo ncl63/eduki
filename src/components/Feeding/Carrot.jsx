@@ -40,13 +40,17 @@ export function CarrotIcon({
 export default function Carrot({
   id,
   onPointerDown,
+  onPointerUp,
   onClick,
   isDragging = false,
+  isSelected = false,
+  invalid = false,
   variant = 'pool',
   'aria-label': ariaLabel = 'carotte',
 }) {
   const sizeClass = variant === 'pool' ? 'w-16 h-16' : 'w-12 h-12'
   const paddingClass = variant === 'pool' ? 'p-2.5' : 'p-1.5'
+  const hoverScale = variant === 'pool' ? 'hover:scale-[1.05]' : 'hover:scale-[1.03]'
 
   return (
     <button
@@ -54,10 +58,12 @@ export default function Carrot({
       data-carrot-id={id}
       aria-label={ariaLabel}
       onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm transition-transform touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 active:scale-95 ${sizeClass} ${paddingClass} ${
+      className={`relative inline-flex items-center justify-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm transition duration-150 ease-out touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-400 active:scale-[0.97] ${hoverScale} ${sizeClass} ${paddingClass} ${
         isDragging ? 'opacity-0' : 'opacity-100'
-      }`}
+      } ${isSelected ? 'ring-4 ring-emerald-300 ring-offset-2' : ''} ${invalid ? 'carrot-invalid' : ''}`}
+      style={{ touchAction: 'none' }}
     >
       <CarrotIcon className="w-full h-full" />
     </button>
