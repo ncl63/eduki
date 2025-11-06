@@ -1,7 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import bunnySceneImg from '../assets/feeding/bunny-plate.svg'
-import carrotImg from '../assets/feeding/carrot-pool.svg'
+import carrotImg from '../assets/feeding/carrot.svg'
+import carrotPoolImg from '../assets/feeding/carrot-pool.svg'
 
 const MIN_TARGET = 1
 const MAX_TARGET = 3
@@ -13,12 +14,12 @@ const randomTarget = () =>
 
 function ThoughtCarrot({ dimmed }) {
   return (
-    <span className="inline-flex h-10 w-10 items-center justify-center">
+    <span className="inline-flex h-9 w-9 items-center justify-center">
       <img
         src={carrotImg}
         alt=""
         aria-hidden="true"
-        className={`h-8 w-8 select-none transition duration-150 ${dimmed ? 'opacity-30 saturate-50' : 'opacity-100'}`}
+        className={`h-7 w-7 select-none transition duration-150 ${dimmed ? 'opacity-30 saturate-50' : 'opacity-100'}`}
       />
     </span>
   )
@@ -29,12 +30,12 @@ function PlateCarrot({ id, onRemove }) {
     <button
       type="button"
       onClick={() => onRemove(id)}
-      className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-white/80 shadow-md ring-1 ring-slate-200 transition hover:-translate-y-1 hover:ring-emerald-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+      className="group relative h-16 w-16 origin-bottom select-none transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
     >
       <img
         src={carrotImg}
         alt="Carotte dans l'assiette"
-        className="h-12 w-12 select-none drop-shadow-md transition duration-150 group-hover:scale-110"
+        className="h-full w-full max-w-[64px] object-contain drop-shadow-[0_10px_12px_rgba(15,23,42,0.18)] transition-transform duration-150 group-hover:scale-110"
       />
       <span className="sr-only">Retirer cette carotte de l'assiette</span>
     </button>
@@ -44,6 +45,7 @@ function PlateCarrot({ id, onRemove }) {
 export default function FeedingExercise({ meta }) {
   const idFactoryRef = React.useRef(0)
   const successTimeoutRef = React.useRef(null)
+  const dragPreviewRef = React.useRef(null)
 
   const createCarrotId = React.useCallback(() => {
     idFactoryRef.current += 1
@@ -94,7 +96,11 @@ export default function FeedingExercise({ meta }) {
   const handlePoolDragStart = React.useCallback((event) => {
     event.dataTransfer.effectAllowed = 'copy'
     event.dataTransfer.setData(DRAG_TYPE, 'pool')
-  }, [])
+    if (dragPreviewRef.current) {
+      const rect = dragPreviewRef.current.getBoundingClientRect()
+      event.dataTransfer.setDragImage(dragPreviewRef.current, rect.width / 2, rect.height / 2)
+    }
+  }, [dragPreviewRef])
 
   const handlePlateDragOver = React.useCallback((event) => {
     event.preventDefault()
@@ -168,12 +174,12 @@ export default function FeedingExercise({ meta }) {
 
   const plateHighlightClasses =
     status === 'success'
-      ? 'border-emerald-400 ring-4 ring-emerald-200/80 shadow-[0_0_0_12px_rgba(134,239,172,0.28)]'
+      ? 'outline outline-[6px] outline-emerald-200/70'
       : status === 'error'
-        ? 'border-rose-400 ring-4 ring-rose-200/70 shadow-[0_0_0_12px_rgba(248,113,113,0.22)]'
+        ? 'outline outline-[6px] outline-rose-200/80'
         : isDragOverPlate
-          ? 'border-emerald-300 ring-4 ring-emerald-200/60 shadow-[0_0_0_10px_rgba(134,239,172,0.16)]'
-          : 'border-slate-200 ring-2 ring-white/70'
+          ? 'outline outline-[4px] outline-emerald-200/60'
+          : 'outline outline-[4px] outline-transparent'
 
   const bubbleCarrots = React.useMemo(
     () =>
@@ -208,24 +214,29 @@ export default function FeedingExercise({ meta }) {
         <section className="mt-12 flex flex-1 flex-col items-center gap-12 rounded-[32px] bg-white/95 p-8 shadow-2xl ring-1 ring-emerald-50 lg:mt-16 lg:p-12">
           <div className="flex w-full flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
             <div className="flex max-w-xs flex-col items-center gap-4 text-center lg:-mt-10 lg:items-center">
-              <button
-                type="button"
-                onClick={handlePoolClick}
-                onKeyDown={handlePoolKeyDown}
-                onDragStart={handlePoolDragStart}
-                draggable
-                className="group relative flex h-36 w-36 items-center justify-center rounded-[2.5rem] border-2 border-orange-200 bg-orange-50/80 shadow-lg transition hover:-translate-y-1 hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-200"
-                aria-label="Prendre une carotte dans le panier"
-              >
+              <div className="relative">
                 <img
-                  src={carrotImg}
+                  src={carrotPoolImg}
                   alt="Carotte à déplacer"
-                  className="h-28 w-28 select-none drop-shadow-[0_12px_18px_rgba(249,115,22,0.35)] transition duration-150 group-hover:scale-110"
+                  className="h-36 w-auto select-none drop-shadow-[0_12px_18px_rgba(15,23,42,0.18)]"
                 />
-                <span className="pointer-events-none absolute -bottom-4 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-md">
-                  Glisse-moi
-                </span>
-              </button>
+                <img
+                  ref={dragPreviewRef}
+                  src={carrotImg}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-auto -translate-x-1/2 -translate-y-1/2 opacity-0"
+                />
+                <button
+                  type="button"
+                  onClick={handlePoolClick}
+                  onKeyDown={handlePoolKeyDown}
+                  onDragStart={handlePoolDragStart}
+                  draggable={true}
+                  aria-label="Prendre une carotte dans le panier"
+                  className="absolute inset-0 rounded-[48px] border-2 border-transparent focus:outline-none focus-visible:border-emerald-300 focus-visible:shadow-[0_0_0_6px_rgba(110,231,183,0.6)]"
+                />
+              </div>
               <p className="max-w-xs text-sm font-medium text-slate-500">
                 Fais glisser la carotte vers l'assiette du lapin pour la dupliquer. Tu peux aussi appuyer dessus pour en ajouter une.
               </p>
@@ -235,19 +246,17 @@ export default function FeedingExercise({ meta }) {
               <img
                 src={bunnySceneImg}
                 alt="Lapin pensif devant son assiette"
-                className="w-full max-w-2xl drop-shadow-xl"
+                className="w-full max-w-2xl select-none"
               />
-              <div className="pointer-events-none absolute left-[12%] top-[9%] flex w-[52%] flex-col items-center gap-4 rounded-[2.5rem] bg-white/80 px-6 py-6 text-center text-slate-700 shadow-lg backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-500">Dans sa tête</p>
-                <div className="flex items-end gap-3">
-                  <span className="text-6xl font-black text-emerald-500">{target}</span>
-                  <span className="pb-1 text-sm font-semibold text-slate-500">
-                    {target > 1 ? 'carottes' : 'carotte'}
-                  </span>
+              <div className="pointer-events-none absolute left-[16%] top-[6%] flex w-[52%] flex-col items-center gap-2 text-center text-slate-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600 drop-shadow-sm">Dans sa tête</p>
+                <div className="flex items-end gap-2 drop-shadow-sm">
+                  <span className="text-6xl font-black text-emerald-600">{target}</span>
+                  <span className="pb-1 text-sm font-semibold text-slate-600">{target > 1 ? 'carottes' : 'carotte'}</span>
                 </div>
-                <div className="flex flex-wrap justify-center gap-2">{bubbleCarrots}</div>
-                <p className="text-xs font-medium text-slate-500">
-                  À placer encore : <span className="font-semibold text-slate-700">{remainingToPlace}</span>
+                <div className="flex flex-wrap justify-center gap-2 drop-shadow-sm">{bubbleCarrots}</div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 drop-shadow-sm">
+                  À placer : <span className="font-black text-slate-700">{remainingToPlace}</span>
                 </p>
               </div>
               <div
@@ -256,12 +265,14 @@ export default function FeedingExercise({ meta }) {
                 onDragOver={handlePlateDragOver}
                 onDragLeave={handlePlateDragLeave}
                 onDrop={handlePlateDrop}
-                className={`absolute left-1/2 top-[59%] flex w-[58%] -translate-x-1/2 flex-wrap items-center justify-center gap-4 rounded-[48px] border bg-white/70 px-6 py-6 backdrop-blur-sm transition duration-150 ${plateHighlightClasses}`}
+                className={`absolute left-1/2 top-[62%] flex w-[50%] -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-[120px] pb-4 pt-2 transition duration-150 ${plateHighlightClasses} outline-offset-[10px]`}
               >
                 {plateCarrots.length > 0 ? (
                   plateCarrots.map((id) => <PlateCarrot key={id} id={id} onRemove={handleRemoveCarrot} />)
                 ) : (
-                  <p className="text-sm font-medium text-slate-400">Dépose les carottes ici</p>
+                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 drop-shadow-sm">
+                    Dépose ici
+                  </span>
                 )}
               </div>
             </div>
