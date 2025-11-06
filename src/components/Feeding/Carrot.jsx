@@ -5,29 +5,45 @@ import React from 'react'
  */
 export function CarrotIcon({
   className = 'w-10 h-10',
-  bodyColor = '#f97316',
-  leavesColor = '#16a34a',
+  bodyColor = '#fb923c',
+  leavesColor = '#4ade80',
   muted = false,
 }) {
-  const resolvedBody = muted ? '#d1d5db' : bodyColor
-  const resolvedLeaves = muted ? '#a3a3a3' : leavesColor
+  const resolvedBody = muted ? '#e5e7eb' : bodyColor
+  const resolvedLeaves = muted ? '#d1d5db' : leavesColor
+  const outline = muted ? '#9ca3af' : '#374151'
 
   return (
     <svg
       aria-hidden="true"
       focusable="false"
       className={className}
-      viewBox="0 0 64 64"
+      viewBox="0 0 72 72"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g fill="none" fillRule="evenodd">
+      <g
+        fill="none"
+        fillRule="evenodd"
+        stroke={outline}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path
-          d="M38 4c2.6 0 6.2 2.8 7.4 6.4-.9-.3-2.7-.6-3.7-.4 3.5 2.3 5.3 5 5.3 8 0 .9-.2 1.8-.4 2.6-2.7-3.8-6.1-6.8-10.1-8.8l3-4.8C39.4 6.2 38 4 38 4Z"
+          d="M46.5 8c3.9 0 7.5 3.1 7.5 7.2 0 2.8-1.2 5.8-3.3 8.6-2.6-4.8-6.2-8.7-10.6-11.3.9-2.8 3.5-4.5 6.4-4.5Z"
           fill={resolvedLeaves}
         />
         <path
-          d="M23.6 18.6c4-4 17.2-4.2 21.3-.1 4.1 4.1 4.3 17.3.2 21.4l-13 13c-2.7 2.7-6.1 5.1-9.5 4.1-3.2-1-5.1-4.4-5.7-7.6-.9-4.7 1.6-9.3 4.2-12.8l2.8-3.7-3.9.4c-2 .2-3.7-1.4-3.9-3.4-.2-1.7.9-3.3 2.4-3.9l3.8-1.4-1.1-1.3c-1.4-1.6-1.3-4 .2-5.6Z"
+          d="M38.7 11.7c2.7-.6 5.7.6 7.2 3-4.2 1.2-7.6 3.5-10.2 6.8-2.7-2.3-3-6.6-.8-9.2 1-.7 2.2-1.2 3.8-.6Z"
+          fill={resolvedLeaves}
+        />
+        <path
+          d="M22.4 25.8c6.7-6.7 28.4-7 35.2-.2 6.8 6.8 7.2 28.6.3 35.4l-16.8 16.8c-3.7 3.7-8.5 6.4-13.3 5-4.5-1.3-7-5.4-7.8-9.4-1.2-6 1.7-11.8 4.9-16.1l4.1-5.1-5.8.6c-2.6.3-4.9-1.9-5.1-4.6-.2-2.3 1.1-4.4 3.2-5.3l5.4-1.9-1.6-1.9c-1.9-2.2-1.8-5.6.5-7.3Z"
           fill={resolvedBody}
+        />
+        <path
+          d="m33.2 41.8 11.5 11.5"
+          stroke={muted ? '#cbd5f5' : '#fcd34d'}
         />
       </g>
     </svg>
