@@ -1,52 +1,43 @@
 import React from 'react'
-import thoughtBubbleImg from '../assets/feeding/thought-bubble.svg'
-import bunnyImg from '../assets/feeding/bunny.svg'
-import tableImg from '../assets/feeding/table.svg'
+import { Link } from 'react-router-dom'
+import bunnySceneImg from '../assets/feeding/bunny-plate.svg'
 import carrotImg from '../assets/feeding/carrot.svg'
+import carrotPoolImg from '../assets/feeding/carrot-pool.svg'
 
 const MIN_TARGET = 1
 const MAX_TARGET = 3
-const POOL_SIZE = 6
 const SUCCESS_RESET_DELAY = 1400
+const DRAG_TYPE = 'application/x-carrot-source'
 
 const randomTarget = () =>
   Math.floor(Math.random() * (MAX_TARGET - MIN_TARGET + 1)) + MIN_TARGET
 
-function CarrotIndicator({ dimmed }) {
+function ThoughtCarrot({ dimmed }) {
   return (
-    <span className="inline-flex h-12 w-12 items-center justify-center">
+    <span className="inline-flex h-9 w-9 items-center justify-center">
       <img
         src={carrotImg}
         alt=""
         aria-hidden="true"
-        className={`h-10 w-10 object-contain drop-shadow-sm transition ${dimmed ? 'opacity-30 saturate-50' : ''}`}
+        className={`h-7 w-7 select-none transition duration-150 ${dimmed ? 'opacity-30 saturate-50' : 'opacity-100'}`}
       />
     </span>
   )
 }
 
-function CarrotToken({ id, onClick, ariaLabel, variant = 'pool' }) {
-  const baseClasses =
-    'group relative flex h-20 w-20 items-center justify-center rounded-3xl border-2 transition duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 focus-visible:ring-offset-2'
-
-  const variantClasses =
-    variant === 'pool'
-      ? 'border-orange-200 bg-orange-50/70 hover:-translate-y-1 hover:border-orange-300 hover:bg-orange-100/80'
-      : 'border-emerald-200 bg-white/90 hover:-translate-y-1 hover:border-emerald-300'
-
+function PlateCarrot({ id, onRemove }) {
   return (
     <button
       type="button"
-      onClick={() => onClick(id)}
-      aria-label={ariaLabel}
-      className={`${baseClasses} ${variantClasses}`}
+      onClick={() => onRemove(id)}
+      className="group relative h-16 w-16 origin-bottom select-none transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
     >
       <img
         src={carrotImg}
-        alt=""
-        aria-hidden="true"
-        className="h-14 w-14 object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)] transition duration-150 ease-out group-hover:scale-110 group-focus-visible:scale-110"
+        alt="Carotte dans l'assiette"
+        className="h-full w-full max-w-[64px] object-contain drop-shadow-[0_10px_12px_rgba(15,23,42,0.18)] transition-transform duration-150 group-hover:scale-110"
       />
+      <span className="sr-only">Retirer cette carotte de l'assiette</span>
     </button>
   )
 }
@@ -54,22 +45,18 @@ function CarrotToken({ id, onClick, ariaLabel, variant = 'pool' }) {
 export default function FeedingExercise({ meta }) {
   const idFactoryRef = React.useRef(0)
   const successTimeoutRef = React.useRef(null)
+  const dragPreviewRef = React.useRef(null)
 
   const createCarrotId = React.useCallback(() => {
     idFactoryRef.current += 1
     return `carrot-${idFactoryRef.current.toString(36)}`
   }, [])
 
-  const buildPool = React.useCallback(
-    () => Array.from({ length: POOL_SIZE }, () => createCarrotId()),
-    [createCarrotId],
-  )
-
   const [target, setTarget] = React.useState(() => randomTarget())
-  const [pool, setPool] = React.useState(() => buildPool())
-  const [plate, setPlate] = React.useState([])
+  const [plateCarrots, setPlateCarrots] = React.useState([])
   const [status, setStatus] = React.useState('idle')
   const [feedback, setFeedback] = React.useState('')
+  const [isDragOverPlate, setIsDragOverPlate] = React.useState(false)
 
   const clearSuccessTimeout = React.useCallback(() => {
     if (successTimeoutRef.current) {
@@ -80,41 +67,71 @@ export default function FeedingExercise({ meta }) {
 
   const resetExercise = React.useCallback(() => {
     setTarget(randomTarget())
-    setPool(buildPool())
-    setPlate([])
+    setPlateCarrots([])
     setStatus('idle')
     setFeedback('')
-  }, [buildPool])
+  }, [])
 
-  const handleTakeCarrot = React.useCallback(
-    (id) => {
-      setPool((prevPool) => {
-        if (!prevPool.includes(id)) {
-          return prevPool
-        }
-        setPlate((prevPlate) => [...prevPlate, id])
-        setStatus('idle')
-        setFeedback('')
-        clearSuccessTimeout()
-        return prevPool.filter((carrotId) => carrotId !== id)
-      })
+  const spawnCarrot = React.useCallback(() => {
+    setPlateCarrots((prev) => [...prev, createCarrotId()])
+    setStatus('idle')
+    setFeedback('')
+    clearSuccessTimeout()
+  }, [createCarrotId, clearSuccessTimeout])
+
+  const handlePoolClick = React.useCallback(() => {
+    spawnCarrot()
+  }, [spawnCarrot])
+
+  const handlePoolKeyDown = React.useCallback(
+    (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        spawnCarrot()
+      }
     },
-    [clearSuccessTimeout],
+    [spawnCarrot],
   )
 
-  const handleReturnCarrot = React.useCallback(
+  const handlePoolDragStart = React.useCallback((event) => {
+    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.setData(DRAG_TYPE, 'pool')
+    if (dragPreviewRef.current) {
+      const rect = dragPreviewRef.current.getBoundingClientRect()
+      event.dataTransfer.setDragImage(dragPreviewRef.current, rect.width / 2, rect.height / 2)
+    }
+  }, [dragPreviewRef])
+
+  const handlePlateDragOver = React.useCallback((event) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    setIsDragOverPlate(true)
+  }, [])
+
+  const handlePlateDragLeave = React.useCallback((event) => {
+    if (event.currentTarget.contains(event.relatedTarget)) {
+      return
+    }
+    setIsDragOverPlate(false)
+  }, [])
+
+  const handlePlateDrop = React.useCallback(
+    (event) => {
+      event.preventDefault()
+      setIsDragOverPlate(false)
+      if (event.dataTransfer.getData(DRAG_TYPE) === 'pool') {
+        spawnCarrot()
+      }
+    },
+    [spawnCarrot],
+  )
+
+  const handleRemoveCarrot = React.useCallback(
     (id) => {
-      setPlate((prevPlate) => {
-        if (!prevPlate.includes(id)) {
-          return prevPlate
-        }
-        const nextPlate = prevPlate.filter((carrotId) => carrotId !== id)
-        setPool((prevPool) => [...prevPool, id])
-        setStatus('idle')
-        setFeedback('')
-        clearSuccessTimeout()
-        return nextPlate
-      })
+      setPlateCarrots((prev) => prev.filter((carrotId) => carrotId !== id))
+      setStatus('idle')
+      setFeedback('')
+      clearSuccessTimeout()
     },
     [clearSuccessTimeout],
   )
@@ -122,16 +139,16 @@ export default function FeedingExercise({ meta }) {
   const handleVerify = React.useCallback(() => {
     clearSuccessTimeout()
 
-    if (plate.length === target) {
+    if (plateCarrots.length === target) {
       setStatus('success')
-      setFeedback('Bravo ! Tu as donné le bon nombre de carottes.')
+      setFeedback('Bravo ! Tu as donné le bon nombre de carottes !')
       successTimeoutRef.current = setTimeout(() => {
         resetExercise()
       }, SUCCESS_RESET_DELAY)
       return
     }
 
-    const difference = target - plate.length
+    const difference = target - plateCarrots.length
     if (difference > 0) {
       setStatus('error')
       setFeedback(
@@ -146,160 +163,154 @@ export default function FeedingExercise({ meta }) {
     setStatus('error')
     setFeedback(
       surplus === 1
-        ? 'Il y a une carotte de trop dans la mangeoire.'
-        : `Il y a ${surplus} carottes de trop dans la mangeoire.`,
+        ? 'Il y a une carotte de trop dans l\'assiette.'
+        : `Il y a ${surplus} carottes de trop dans l'assiette.`,
     )
-  }, [plate.length, target, resetExercise, clearSuccessTimeout])
+  }, [plateCarrots.length, target, resetExercise, clearSuccessTimeout])
 
   React.useEffect(() => () => clearSuccessTimeout(), [clearSuccessTimeout])
 
-  const bubbleCarrots = React.useMemo(() => {
-    return Array.from({ length: target }, (_, index) => (
-      <CarrotIndicator
-        key={`indicator-${index}`}
-        dimmed={index < Math.min(plate.length, target)}
-      />
-    ))
-  }, [plate.length, target])
-
-  const remainingToPlace = Math.max(target - plate.length, 0)
+  const remainingToPlace = Math.max(target - plateCarrots.length, 0)
 
   const plateHighlightClasses =
     status === 'success'
-      ? 'border-emerald-400 ring-4 ring-emerald-200/70'
+      ? 'outline outline-[6px] outline-emerald-200/70'
       : status === 'error'
-        ? 'border-rose-400 ring-4 ring-rose-200/70'
-        : 'border-slate-200 ring-2 ring-white/80'
+        ? 'outline outline-[6px] outline-rose-200/80'
+        : isDragOverPlate
+          ? 'outline outline-[4px] outline-emerald-200/60'
+          : 'outline outline-[4px] outline-transparent'
+
+  const bubbleCarrots = React.useMemo(
+    () =>
+      Array.from({ length: target }, (_, index) => (
+        <ThoughtCarrot key={`bubble-${index}`} dimmed={index < Math.min(plateCarrots.length, target)} />
+      )),
+    [plateCarrots.length, target],
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-slate-100">
-      <main className="mx-auto flex min-h-screen max-w-6xl flex-col items-center px-4 py-10 lg:py-16">
-        <header className="mb-12 text-center">
-          {meta?.niveau ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-500">
-              {meta.niveau}
-            </p>
-          ) : null}
-          <h1 className="mt-3 text-4xl font-black text-slate-800 md:text-5xl">
-            {meta?.titre ?? 'Mangeoire fantôme'}
-          </h1>
-          {meta?.description ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600">
-              {meta.description}
-            </p>
-          ) : null}
-        </header>
+      <main className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-16 pt-10 lg:pt-16">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3 text-center lg:text-left">
+            {meta?.niveau ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.45em] text-emerald-500">{meta.niveau}</p>
+            ) : null}
+            <h1 className="text-4xl font-black text-slate-800 md:text-5xl">{meta?.titre ?? 'Mangeoire fantôme'}</h1>
+            {meta?.description ? (
+              <p className="mx-auto max-w-2xl text-base text-slate-600 lg:mx-0">{meta.description}</p>
+            ) : null}
+          </div>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center gap-2 self-center rounded-full border border-emerald-200 bg-white px-5 py-2 text-sm font-semibold text-emerald-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            <span aria-hidden="true">←</span>
+            Retour à l'accueil
+          </Link>
+        </div>
 
-        <div className="flex w-full flex-col gap-8 lg:flex-row">
-          <section className="relative flex flex-1 flex-col items-center gap-10 rounded-[32px] bg-white/95 p-8 shadow-xl ring-1 ring-slate-100 lg:p-12">
-            <div className="relative flex w-full justify-center">
-              <img
-                src={thoughtBubbleImg}
-                alt=""
-                aria-hidden="true"
-                className="h-56 w-auto drop-shadow-lg sm:h-64"
-              />
-              <div className="absolute inset-x-[14%] top-[20%] flex flex-col items-center gap-4 text-center text-slate-700">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">
-                  Nombre de carottes demandées
-                </p>
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-black text-emerald-500 sm:text-6xl">
-                    {target}
-                  </span>
-                  <span className="pb-1 text-sm font-semibold text-slate-500 sm:text-base">
-                    {target > 1 ? 'carottes' : 'carotte'}
-                  </span>
-                </div>
-                <div className="flex flex-wrap justify-center gap-3">{bubbleCarrots}</div>
-                <p className="text-xs font-medium text-slate-500">
-                  À placer :{' '}
-                  <span className="font-semibold text-slate-700">{remainingToPlace}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="relative flex w-full max-w-xl flex-col items-center">
-              <img
-                src={bunnyImg}
-                alt="Lapin affamé"
-                className="z-10 w-44 drop-shadow-xl sm:w-52"
-              />
-              <div className="relative mt-[-36px] w-full">
-                <div
-                  className={`absolute left-1/2 top-[30%] z-20 flex min-h-[96px] w-[68%] -translate-x-1/2 items-center justify-center gap-4 rounded-[28px] bg-white/90 px-4 py-4 backdrop-blur-sm transition-all ${plateHighlightClasses}`}
-                >
-                  {plate.length > 0 ? (
-                    plate.map((id) => (
-                      <CarrotToken
-                        key={id}
-                        id={id}
-                        variant="plate"
-                        onClick={handleReturnCarrot}
-                        ariaLabel="Retirer la carotte de l'assiette"
-                      />
-                    ))
-                  ) : (
-                    <p className="text-sm font-medium text-slate-400">
-                      Dépose les carottes ici
-                    </p>
-                  )}
-                </div>
+        <section className="mt-12 flex flex-1 flex-col items-center gap-12 rounded-[32px] bg-white/95 p-8 shadow-2xl ring-1 ring-emerald-50 lg:mt-16 lg:p-12">
+          <div className="flex w-full flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
+            <div className="flex max-w-xs flex-col items-center gap-4 text-center lg:-mt-10 lg:items-center">
+              <div className="relative">
                 <img
-                  src={tableImg}
-                  alt="Table du lapin"
-                  className="relative z-10 w-full max-w-md drop-shadow-lg"
+                  src={carrotPoolImg}
+                  alt="Carotte à déplacer"
+                  className="h-36 w-auto select-none drop-shadow-[0_12px_18px_rgba(15,23,42,0.18)]"
+                />
+                <img
+                  ref={dragPreviewRef}
+                  src={carrotImg}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-auto -translate-x-1/2 -translate-y-1/2 opacity-0"
+                />
+                <button
+                  type="button"
+                  onClick={handlePoolClick}
+                  onKeyDown={handlePoolKeyDown}
+                  onDragStart={handlePoolDragStart}
+                  draggable={true}
+                  aria-label="Prendre une carotte dans le panier"
+                  className="absolute inset-0 rounded-[48px] border-2 border-transparent focus:outline-none focus-visible:border-emerald-300 focus-visible:shadow-[0_0_0_6px_rgba(110,231,183,0.6)]"
                 />
               </div>
-              <p className="mt-6 text-sm font-semibold text-slate-600">
-                Place les carottes dans l'assiette du lapin
-              </p>
-            </div>
-          </section>
-
-          <section className="flex w-full max-w-sm flex-col justify-between gap-8 rounded-[32px] bg-white/95 p-8 shadow-xl ring-1 ring-slate-100 lg:p-10">
-            <div className="space-y-3 text-center lg:text-left">
-              <h2 className="text-2xl font-semibold text-slate-800">Pool de carottes</h2>
-              <p className="text-sm text-slate-500">
-                Clique sur une carotte pour la prendre, puis clique sur celles de l'assiette pour les retirer si besoin.
+              <p className="max-w-xs text-sm font-medium text-slate-500">
+                Fais glisser la carotte vers l'assiette du lapin pour la dupliquer. Tu peux aussi appuyer dessus pour en ajouter une.
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              {pool.length > 0 ? (
-                pool.map((id) => (
-                  <CarrotToken
-                    key={id}
-                    id={id}
-                    onClick={handleTakeCarrot}
-                    ariaLabel="Ajouter cette carotte à l'assiette"
-                  />
-                ))
-              ) : (
-                <p className="col-span-3 text-center text-sm font-medium text-slate-400">
-                  Il n'y a plus de carottes dans le panier.
+            <div className="relative w-full max-w-2xl">
+              <img
+                src={bunnySceneImg}
+                alt="Lapin pensif devant son assiette"
+                className="w-full max-w-2xl select-none"
+              />
+              <div className="pointer-events-none absolute left-[16%] top-[6%] flex w-[52%] flex-col items-center gap-2 text-center text-slate-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600 drop-shadow-sm">Dans sa tête</p>
+                <div className="flex items-end gap-2 drop-shadow-sm">
+                  <span className="text-6xl font-black text-emerald-600">{target}</span>
+                  <span className="pb-1 text-sm font-semibold text-slate-600">{target > 1 ? 'carottes' : 'carotte'}</span>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 drop-shadow-sm">{bubbleCarrots}</div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 drop-shadow-sm">
+                  À placer : <span className="font-black text-slate-700">{remainingToPlace}</span>
                 </p>
-              )}
+              </div>
+              <div
+                role="list"
+                aria-label="Assiette du lapin"
+                onDragOver={handlePlateDragOver}
+                onDragLeave={handlePlateDragLeave}
+                onDrop={handlePlateDrop}
+                className={`absolute left-1/2 top-[62%] flex w-[50%] -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-[120px] pb-4 pt-2 transition duration-150 ${plateHighlightClasses} outline-offset-[10px]`}
+              >
+                {plateCarrots.length > 0 ? (
+                  plateCarrots.map((id) => <PlateCarrot key={id} id={id} onRemove={handleRemoveCarrot} />)
+                ) : (
+                  <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 drop-shadow-sm">
+                    Dépose ici
+                  </span>
+                )}
+              </div>
             </div>
+          </div>
 
-            <div className="space-y-4">
+          <div className="flex w-full flex-col items-center gap-6 text-center lg:max-w-3xl">
+            <p className="text-base font-medium text-slate-600">
+              Lorsque tu ajoutes une carotte dans l'assiette, une carotte se grise dans la bulle du lapin. Mets-en autant qu'il en rêve !
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
               <button
                 type="button"
                 onClick={handleVerify}
-                className="w-full rounded-full bg-emerald-500 px-6 py-3 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-emerald-500 px-8 py-3 text-lg font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
               >
                 Vérifier la réponse
               </button>
-              {feedback ? (
-                <p
-                  className={`text-center text-sm font-semibold ${status === 'error' ? 'text-rose-600' : 'text-emerald-600'}`}
-                >
-                  {feedback}
-                </p>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  clearSuccessTimeout()
+                  resetExercise()
+                }}
+                className="rounded-full border border-emerald-200 bg-white px-8 py-3 text-lg font-semibold text-emerald-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                Recommencer
+              </button>
             </div>
-          </section>
-        </div>
+            {feedback ? (
+              <p
+                className={`text-base font-semibold ${status === 'error' ? 'text-rose-600' : 'text-emerald-600'}`}
+                role="status"
+              >
+                {feedback}
+              </p>
+            ) : null}
+          </div>
+        </section>
       </main>
     </div>
   )
