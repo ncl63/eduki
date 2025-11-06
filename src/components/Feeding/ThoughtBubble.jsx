@@ -1,4 +1,5 @@
 import React from 'react'
+import { ThoughtBubbleShape } from './Illustrations.jsx'
 
 /**
  * Consigne affichée dans la bulle (lapin).
@@ -24,42 +25,48 @@ export default function ThoughtBubble({
     )
   })
 
-  const bubbleTone =
+  const tone =
     status === 'success'
-      ? 'border-emerald-200 bg-emerald-50'
+      ? { stroke: '#34d399', fill: '#ecfdf5', badge: 'text-emerald-600' }
       : status === 'error'
-        ? 'border-rose-300 bg-rose-50'
-        : 'border-gray-200 bg-white'
+        ? { stroke: '#f87171', fill: '#ffe4e6', badge: 'text-rose-600' }
+        : { stroke: '#d1d5db', fill: '#ffffff', badge: 'text-gray-600' }
 
   const remaining = Math.max(targetCount - currentCount, 0)
 
   return (
     <div
-      className={`rounded-2xl border shadow-sm p-6 flex flex-col gap-4 max-w-sm transition-colors ${bubbleTone} ${
-        animate ? 'bubble-animate' : ''
-      }`}
+      className={`relative w-full max-w-sm ${animate ? 'bubble-animate' : ''}`}
       aria-live="polite"
     >
-      <div className="space-y-1.5">
-        <p className="text-sm uppercase tracking-wide text-gray-500">Consigne</p>
-        <p className="text-2xl font-semibold text-gray-900">
-          Donne <span className="font-black text-emerald-600">{targetCount}</span>{' '}
-          {targetCount > 1 ? 'carottes' : 'carotte'}.
-        </p>
-      </div>
+      <ThoughtBubbleShape
+        className="w-full h-auto"
+        fill={tone.fill}
+        stroke={tone.stroke}
+      />
 
-      <div className="flex items-center gap-3">
-        <div className="flex gap-2">{carrots}</div>
-        <span className="ml-auto text-sm font-medium text-gray-600">
-          Restantes : {remaining}
-        </span>
-      </div>
+      <div className="absolute inset-[14%] flex flex-col gap-4 text-gray-700">
+        <div className="space-y-1.5">
+          <p className="text-sm uppercase tracking-wide text-gray-500">Consigne</p>
+          <p className="text-2xl font-semibold text-gray-900">
+            Donne <span className="font-black text-emerald-600">{targetCount}</span>{' '}
+            {targetCount > 1 ? 'carottes' : 'carotte'}.
+          </p>
+        </div>
 
-      <div className="text-sm text-gray-500">
-        Dans la mangeoire :{' '}
-        <span className="font-semibold text-gray-800">
-          {currentCount} / {targetCount}
-        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-wrap gap-2">{carrots}</div>
+          <span className={`ml-auto text-sm font-semibold ${tone.badge}`}>
+            Restantes : {remaining}
+          </span>
+        </div>
+
+        <div className="text-sm text-gray-600">
+          Dans la mangeoire :{' '}
+          <span className="font-semibold text-gray-900">
+            {currentCount} / {targetCount}
+          </span>
+        </div>
       </div>
     </div>
   )

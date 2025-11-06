@@ -1,5 +1,6 @@
 import React from 'react'
 import Carrot from './Carrot.jsx'
+import { TableIllustration } from './Illustrations.jsx'
 
 const highlightClasses =
   'border-emerald-400 ring-2 ring-inset ring-emerald-200 bg-emerald-50/50'
@@ -64,6 +65,12 @@ const Feeder = React.forwardRef(function Feeder(
           <span className="text-gray-900">{currentCount}</span>
         </span>
       </div>
+      <div className="px-5 pt-4" aria-hidden="true">
+        <div className="flex justify-center">
+          <TableIllustration className="h-24 w-auto drop-shadow-sm" />
+        </div>
+      </div>
+
       <div
         className={`${contentClasses} min-h-[180px]`}
         onClick={handleClick}

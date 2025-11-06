@@ -5,6 +5,7 @@ import Feeder from '../components/Feeding/Feeder.jsx'
 import Carrot, { CarrotIcon } from '../components/Feeding/Carrot.jsx'
 import VerifyButton from '../components/Feeding/VerifyButton.jsx'
 import SettingsModal from '../components/Feeding/SettingsModal.jsx'
+import { BunnyIcon } from '../components/Feeding/Illustrations.jsx'
 
 const SETTINGS_KEY = 'feeding.settings'
 const DEFAULT_SETTINGS = {
@@ -528,12 +529,17 @@ export default function FeedingExercise({ meta }) {
             <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-8">
               <div
                 className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-gray-200 bg-white shadow-lg transition-all duration-300 ${
-                  chewing ? 'ring-4 ring-emerald-200' : ''
+                  chewing ? 'ring-4 ring-emerald-200 ring-offset-2 ring-offset-white' : ''
                 }`}
                 aria-hidden="true"
               >
                 <CarrotIcon className="absolute -top-3 -right-2 h-12 w-12 opacity-80" />
-                <RabbitIllustration chewing={chewing} />
+                <BunnyIcon
+                  chewing={chewing}
+                  className={`w-32 transition-transform duration-300 ${
+                    chewing ? 'scale-[1.05]' : ''
+                  }`}
+                />
               </div>
 
               <ThoughtBubble
@@ -641,40 +647,6 @@ export default function FeedingExercise({ meta }) {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function RabbitIllustration({ chewing }) {
-  return (
-    <div
-      className={`relative flex h-40 w-32 flex-col items-center justify-center transition-transform duration-200 ${
-        chewing ? 'scale-[1.05]' : ''
-      }`}
-    >
-      <div className="absolute -top-6 flex w-full justify-between px-4">
-        <span className="h-10 w-4 rounded-t-full bg-gray-200" />
-        <span className="h-10 w-4 rounded-t-full bg-gray-200" />
-      </div>
-      <div className="relative flex h-32 w-full flex-col items-center justify-center rounded-[40%] bg-gray-100 shadow-inner">
-        <div className="mt-6 flex gap-6">
-          <span className="h-3 w-3 rounded-full bg-gray-800" />
-            <span className="h-3 w-3 rounded-full bg-gray-800" />
-        </div>
-        <div
-          className={`mt-4 h-4 w-10 rounded-full bg-gray-800 transition-transform duration-200 ${
-            chewing ? 'scale-y-75' : ''
-          }`}
-        />
-        <div className="mt-4 flex items-center gap-2">
-          <div className="h-6 w-4 rounded-br-full rounded-tr-full border border-gray-300 bg-white" />
-          <div className="h-6 w-4 rounded-bl-full rounded-tl-full border border-gray-300 bg-white" />
-        </div>
-      </div>
-      <div className="absolute -bottom-5 flex w-full items-center justify-center gap-3">
-        <span className="h-8 w-6 rounded-full border border-gray-300 bg-white" />
-        <span className="h-8 w-6 rounded-full border border-gray-300 bg-white" />
-      </div>
     </div>
   )
 }
