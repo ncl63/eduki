@@ -169,7 +169,7 @@ export default function WordRecompose({ meta }) {
       <main className="flex-1 flex flex-col gap-8">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
-            <div className="w-full flex flex-wrap justify-center gap-4">
+            <div className="w-full flex flex-wrap justify-center gap-6">
               {round.targetLetters.map((char, index) => (
                 <LetterSlot key={`${char}-${index}`} value={round.slots[index]} />
               ))}
@@ -216,9 +216,17 @@ function LetterSlot({ value }) {
   const filled = value != null
   return (
     <div
-      className={`w-16 h-20 md:w-20 md:h-24 rounded-2xl border-2 flex items-center justify-center text-3xl md:text-4xl font-semibold transition ${
+      className={`rounded-2xl border-2 flex items-center justify-center font-semibold transition ${
         filled ? 'bg-indigo-100 border-indigo-300 text-indigo-900' : 'bg-white border-indigo-200 text-indigo-300'
       }`}
+      style={{
+        flex: '1 1 clamp(4.5rem, 12vw, 9rem)',
+        minWidth: 'clamp(4.5rem, 12vw, 9rem)',
+        minHeight: 'clamp(5rem, 14vw, 10rem)',
+        fontSize: 'clamp(2.5rem, 10vw, 5rem)',
+        paddingInline: 'clamp(0.5rem, 2vw, 1.5rem)',
+        paddingBlock: 'clamp(0.5rem, 2vw, 1.5rem)',
+      }}
     >
       {filled ? value : ''}
     </div>
