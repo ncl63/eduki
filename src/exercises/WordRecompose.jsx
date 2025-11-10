@@ -176,15 +176,26 @@ export default function WordRecompose({ meta }) {
             </div>
           </div>
 
-          <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">
-            {feedback
-              ? feedback
-              : remainingSlots === round.targetLetters.length
-              ? 'Clique sur la première lettre du mot.'
-              : remainingSlots === 0
-              ? 'Bravo !'
-              : `Encore ${remainingSlots} lettre${remainingSlots > 1 ? 's' : ''} à placer.`}
-          </div>
+          {(() => {
+            const initialRound = remainingSlots === round.targetLetters.length
+            const message =
+              feedback ??
+              (remainingSlots === 0
+                ? 'Bravo !'
+                : initialRound
+                ? ''
+                : `Encore ${remainingSlots} lettre${remainingSlots > 1 ? 's' : ''} à placer.`)
+
+            if (!message) {
+              return null
+            }
+
+            return (
+              <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">
+                {message}
+              </div>
+            )
+          })()}
         </div>
 
         <div className="w-full flex flex-wrap justify-center gap-4 pb-4">
@@ -238,10 +249,15 @@ function LetterChoice({ letter, onClick }) {
       type="button"
       onClick={onClick}
       disabled={state === 'used'}
-      className={`px-6 py-4 md:px-8 md:py-5 rounded-[2rem] border ${border} ${bg} ${text} shadow-md font-semibold text-3xl md:text-4xl leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
+      className={`rounded-[2.5rem] border ${border} ${bg} ${text} shadow-md font-semibold leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
         state === 'used' ? 'cursor-not-allowed' : 'hover:scale-105'
       }`}
-      style={{ minWidth: '4.5rem' }}
+      style={{
+        minWidth: 'clamp(4.5rem, 12vw, 9rem)',
+        paddingInline: 'clamp(1.5rem, 5vw, 3.5rem)',
+        paddingBlock: 'clamp(1rem, 4vw, 2.75rem)',
+        fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+      }}
     >
       {char}
     </button>
