@@ -128,14 +128,14 @@ export default function WordRecompose({ meta }) {
   return (
     <div className="min-h-screen px-4 py-6 md:px-10 md:py-10 flex flex-col gap-8">
       <header className="w-full space-y-3">
-        <div className="w-full grid grid-cols-3 items-center">
+        <div className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center">
           <div>
             <Link to="/" className="text-sm text-gray-600 hover:underline">
               ⬅️ Accueil
             </Link>
           </div>
-          <div className="flex justify-center">
-            <div className="flex flex-nowrap justify-center gap-3 overflow-x-auto">
+          <div className="flex justify-center min-w-0">
+            <div className="flex flex-nowrap justify-center gap-3 overflow-x-auto min-w-0">
               {round.targetLetters.map((char, index) => {
                 const filled = round.slots[index] != null
                 return (
