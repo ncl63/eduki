@@ -13,6 +13,13 @@ export const EXERCISES = [
     description: 'Glisse les carottes pour nourrir le lapin exactement comme demandé.',
     settingsPath: null,
   },
+  {
+    id: 'word-recompose',
+    titre: 'Recompose le mot',
+    niveau: 'CP',
+    description: "Recompose le mot affiché en sélectionnant les lettres dans l'ordre.",
+    settingsPath: '/settings/words',
+  },
 ]
 
 export function getExerciseById(id) {
