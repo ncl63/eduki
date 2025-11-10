@@ -135,7 +135,7 @@ export default function WordRecompose({ meta }) {
             </Link>
           </div>
           <div className="flex justify-center">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-nowrap justify-center gap-3 overflow-x-auto">
               {round.targetLetters.map((char, index) => {
                 const filled = round.slots[index] != null
                 return (
