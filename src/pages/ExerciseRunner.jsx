@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import { getExerciseById } from '../data/exercises.js'
 import LetterFind from '../exercises/LetterFind.jsx'
 import FeedingExercise from '../exercises/FeedingExercise.jsx'
+import WordRecompose from '../exercises/WordRecompose.jsx'
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,
   feeding: FeedingExercise,
+  'word-recompose': WordRecompose,
 }
 
 export default function ExerciseRunner() {
