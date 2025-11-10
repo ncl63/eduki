@@ -166,39 +166,39 @@ export default function WordRecompose({ meta }) {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col gap-10">
-        <div className="flex-1 flex flex-col items-center justify-center gap-8">
-          <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex items-center justify-center">
+      <main className="flex-1 flex flex-col gap-8">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
             <div className="w-full flex flex-wrap justify-center gap-4">
               {round.targetLetters.map((char, index) => (
                 <LetterSlot key={`${char}-${index}`} value={round.slots[index]} />
               ))}
             </div>
+
+            {(() => {
+              const initialRound = remainingSlots === round.targetLetters.length
+              const message =
+                feedback ??
+                (remainingSlots === 0
+                  ? 'Bravo !'
+                  : initialRound
+                  ? ''
+                  : `Encore ${remainingSlots} lettre${remainingSlots > 1 ? 's' : ''} à placer.`)
+
+              if (!message) {
+                return null
+              }
+
+              return (
+                <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">
+                  {message}
+                </div>
+              )
+            })()}
           </div>
-
-          {(() => {
-            const initialRound = remainingSlots === round.targetLetters.length
-            const message =
-              feedback ??
-              (remainingSlots === 0
-                ? 'Bravo !'
-                : initialRound
-                ? ''
-                : `Encore ${remainingSlots} lettre${remainingSlots > 1 ? 's' : ''} à placer.`)
-
-            if (!message) {
-              return null
-            }
-
-            return (
-              <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">
-                {message}
-              </div>
-            )
-          })()}
         </div>
 
-        <div className="w-full flex flex-wrap justify-center gap-4 pb-4">
+        <div className="w-full flex flex-wrap justify-center gap-6 pb-6">
           {round.pool.map((letter) => (
             <LetterChoice
               key={letter.id}
@@ -249,14 +249,15 @@ function LetterChoice({ letter, onClick }) {
       type="button"
       onClick={onClick}
       disabled={state === 'used'}
-      className={`rounded-[2.5rem] border ${border} ${bg} ${text} shadow-md font-semibold leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
-        state === 'used' ? 'cursor-not-allowed' : 'hover:scale-105'
+      className={`inline-flex items-center justify-center rounded-[3.75rem] border ${border} ${bg} ${text} shadow-lg font-bold leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
+        state === 'used' ? 'cursor-not-allowed' : 'hover:scale-[1.03]'
       }`}
       style={{
-        minWidth: 'clamp(4.5rem, 12vw, 9rem)',
-        paddingInline: 'clamp(1.5rem, 5vw, 3.5rem)',
-        paddingBlock: 'clamp(1rem, 4vw, 2.75rem)',
-        fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+        minWidth: 'clamp(5rem, 15vw, 11rem)',
+        minHeight: 'clamp(5rem, 15vw, 11rem)',
+        paddingInline: 'clamp(1.75rem, 6vw, 3.75rem)',
+        paddingBlock: 'clamp(1.25rem, 5vw, 3.25rem)',
+        fontSize: 'clamp(3rem, 8vw, 5.5rem)',
       }}
     >
       {char}
