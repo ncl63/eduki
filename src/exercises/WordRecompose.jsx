@@ -126,7 +126,7 @@ export default function WordRecompose({ meta }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
+    <div className="min-h-screen px-4 py-6 md:px-10 md:py-10 flex flex-col gap-8">
       <header className="w-full space-y-3">
         <div className="w-full grid grid-cols-3 items-center">
           <div>
@@ -135,12 +135,22 @@ export default function WordRecompose({ meta }) {
             </Link>
           </div>
           <div className="flex justify-center">
-            <span
-              className="font-bold text-indigo-900 leading-none text-center"
-              style={{ fontSize: 'clamp(32px, 8vw, 112px)' }}
-            >
-              {round.targetWord}
-            </span>
+            <div className="flex flex-wrap justify-center gap-3">
+              {round.targetLetters.map((char, index) => {
+                const filled = round.slots[index] != null
+                return (
+                  <span
+                    key={`${char}-${index}`}
+                    className={`font-bold leading-none text-center transition-colors ${
+                      filled ? 'text-green-500' : 'text-indigo-900'
+                    }`}
+                    style={{ fontSize: 'clamp(32px, 8vw, 112px)' }}
+                  >
+                    {char}
+                  </span>
+                )
+              })}
+            </div>
           </div>
           <div className="flex justify-end">
             <Link to="/settings/words" className="text-sm text-gray-600 hover:underline">
@@ -156,10 +166,10 @@ export default function WordRecompose({ meta }) {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col gap-6 items-stretch">
-        <div className="flex flex-col items-center gap-6 flex-1">
-          <div className="w-full max-w-4xl bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
-            <div className="flex flex-wrap justify-center gap-3">
+      <main className="flex-1 flex flex-col gap-10">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+          <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex items-center justify-center">
+            <div className="w-full flex flex-wrap justify-center gap-4">
               {round.targetLetters.map((char, index) => (
                 <LetterSlot key={`${char}-${index}`} value={round.slots[index]} />
               ))}
@@ -177,7 +187,7 @@ export default function WordRecompose({ meta }) {
           </div>
         </div>
 
-        <div className="w-full max-w-5xl mx-auto flex flex-wrap justify-center gap-3 pb-4">
+        <div className="w-full flex flex-wrap justify-center gap-4 pb-4">
           {round.pool.map((letter) => (
             <LetterChoice
               key={letter.id}
