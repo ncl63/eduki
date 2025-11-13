@@ -31,6 +31,18 @@ if (Object.keys(audioSources).length === 0) {
 const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(audioSources[letter]))
 const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTERS
 
+let sharedAudioElement = null
+function getSharedAudioElement() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  if (!sharedAudioElement) {
+    sharedAudioElement = new Audio()
+    sharedAudioElement.preload = 'auto'
+  }
+  return sharedAudioElement
+}
+
 export const DEFAULT_SOUND_SETTINGS = {
   enabledLetters: [...DEFAULT_ENABLED],
   choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
@@ -94,15 +106,19 @@ function buildRound(settings) {
     return buildRound(DEFAULT_SOUND_SETTINGS)
   }
 
-  const target = enabled[Math.floor(Math.random() * enabled.length)]
-  const others = enabled.filter((letter) => letter !== target)
   const optionsCount = Math.min(safeSettings.choicesPerRound, enabled.length)
+  const shuffledEnabled = shuffleArray(enabled)
+  const optionsPool = shuffledEnabled.slice(0, optionsCount)
 
-  // Ensure the target is always present in the options shown to the user.
-  const shuffledOthers = shuffleArray(others)
-  const neededOthers = Math.max(0, optionsCount - 1)
-  const selectedOthers = shuffledOthers.slice(0, neededOthers)
-  const options = shuffleArray([target, ...selectedOthers])
+  if (optionsPool.length === 0) {
+    return buildRound(DEFAULT_SOUND_SETTINGS)
+  }
+
+  const target = optionsPool[Math.floor(Math.random() * optionsPool.length)]
+  const ensuredOptions = optionsPool.includes(target)
+    ? optionsPool
+    : [...optionsPool.slice(0, Math.max(optionsPool.length - 1, 0)), target]
+  const options = shuffleArray(ensuredOptions)
 
   return {
     id: generateRoundId(),
@@ -151,9 +167,7 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
-    const element = new Audio()
-    element.preload = 'auto'
-    audioRef.current = element
+    audioRef.current = getSharedAudioElement()
 
     return () => {
       if (timeoutRef.current) {
@@ -161,8 +175,7 @@ export default function LetterSound({ meta }) {
       }
       if (audioRef.current) {
         audioRef.current.pause()
-        audioRef.current.src = ''
-        audioRef.current.load()
+        audioRef.current.currentTime = 0
       }
       audioRef.current = null
     }
