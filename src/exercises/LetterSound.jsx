@@ -7,28 +7,28 @@ export const MIN_CHOICES_PER_ROUND = 2
 export const MAX_CHOICES_PER_ROUND = 12
 export const DEFAULT_CHOICES_PER_ROUND = 6
 
-const letterAudioModules = import.meta.glob('../Lettersound/*.m4a', { eager: true })
+const audioModules = import.meta.glob('../Lettersound/*.m4a', { eager: true })
 
-let letterAudios = LETTERS.reduce((acc, letter) => {
-  const module = letterAudioModules[`../Lettersound/${letter}.m4a`]
-  if (module) {
-    acc[letter] = module.default ?? module
+let audioSources = LETTERS.reduce((acc, letter) => {
+  const mod = audioModules[`../Lettersound/${letter}.m4a`]
+  if (mod) {
+    acc[letter] = mod.default ?? mod
   }
   return acc
 }, {})
 
-if (Object.keys(letterAudios).length === 0) {
-  letterAudios = LETTERS.reduce((acc, letter) => {
+if (Object.keys(audioSources).length === 0) {
+  audioSources = LETTERS.reduce((acc, letter) => {
     try {
       acc[letter] = new URL(`../Lettersound/${letter}.m4a`, import.meta.url).href
     } catch {
-      // ignore missing files in fallback
+      // ignore missing audio files
     }
     return acc
   }, {})
 }
 
-const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(letterAudios[letter]))
+const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(audioSources[letter]))
 const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTERS
 
 export const DEFAULT_SOUND_SETTINGS = {
@@ -36,19 +36,25 @@ export const DEFAULT_SOUND_SETTINGS = {
   choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
 export function sanitizeLetterSoundSettings(settings) {
-  const enabled = Array.isArray(settings?.enabledLetters) ? settings.enabledLetters : DEFAULT_ENABLED
-  const normalized = enabled
+  const requestedEnabled = Array.isArray(settings?.enabledLetters)
+    ? settings.enabledLetters
+    : DEFAULT_ENABLED
+
+  const normalized = requestedEnabled
     .map((letter) => (typeof letter === 'string' ? letter.toUpperCase() : ''))
     .filter((letter) => AVAILABLE_LETTERS.includes(letter))
+
   const unique = Array.from(new Set(normalized))
   const requestedChoices = Number.isFinite(settings?.choicesPerRound)
     ? Math.floor(settings.choicesPerRound)
     : DEFAULT_CHOICES_PER_ROUND
-  const boundedChoices = Math.min(
-    MAX_CHOICES_PER_ROUND,
-    Math.max(MIN_CHOICES_PER_ROUND, requestedChoices),
-  )
+  const boundedChoices = clamp(requestedChoices, MIN_CHOICES_PER_ROUND, MAX_CHOICES_PER_ROUND)
+
   return { enabledLetters: unique, choicesPerRound: boundedChoices }
 }
 
@@ -56,6 +62,7 @@ export function loadLetterSoundSettings() {
   if (typeof window === 'undefined') {
     return { ...DEFAULT_SOUND_SETTINGS }
   }
+
   try {
     const stored = window.localStorage.getItem(SETTINGS_KEY)
     if (!stored) {
@@ -71,6 +78,7 @@ export function saveLetterSoundSettings(settings) {
   if (typeof window === 'undefined') {
     return
   }
+
   try {
     window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(sanitizeLetterSoundSettings(settings)))
   } catch {
@@ -78,18 +86,20 @@ export function saveLetterSoundSettings(settings) {
   }
 }
 
-function makeRound(settings) {
+function buildRound(settings) {
   const safeSettings = sanitizeLetterSoundSettings(settings)
   const enabled = safeSettings.enabledLetters.length > 0 ? safeSettings.enabledLetters : DEFAULT_ENABLED
-  const choicesPerRound = safeSettings.choicesPerRound
+
   if (enabled.length === 0) {
-    return makeRound(DEFAULT_SOUND_SETTINGS)
+    return buildRound(DEFAULT_SOUND_SETTINGS)
   }
+
   const target = enabled[Math.floor(Math.random() * enabled.length)]
   const others = enabled.filter((letter) => letter !== target)
-  const shuffled = shuffleArray(others)
-  const optionsCount = Math.min(choicesPerRound, enabled.length)
-  const options = shuffleArray([target, ...shuffled.slice(0, Math.max(0, optionsCount - 1))])
+  const pool = shuffleArray([target, ...others])
+  const optionsCount = Math.min(safeSettings.choicesPerRound, enabled.length)
+  const options = shuffleArray(pool.slice(0, optionsCount))
+
   return {
     id: generateRoundId(),
     target,
@@ -104,8 +114,8 @@ function generateRoundId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function shuffleArray(array) {
-  const copy = [...array]
+function shuffleArray(input) {
+  const copy = [...input]
   for (let i = copy.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[copy[i], copy[j]] = [copy[j], copy[i]]
@@ -116,19 +126,20 @@ function shuffleArray(array) {
 export default function LetterSound({ meta }) {
   const [settings] = useState(() => {
     const loaded = loadLetterSoundSettings()
-    const withFallback = !loaded.enabledLetters || loaded.enabledLetters.length === 0
+    const filled = !loaded.enabledLetters || loaded.enabledLetters.length === 0
       ? { ...loaded, enabledLetters: [...DEFAULT_SOUND_SETTINGS.enabledLetters] }
       : loaded
-    return sanitizeLetterSoundSettings(withFallback)
+    return sanitizeLetterSoundSettings(filled)
   })
-  const [round, setRound] = useState(() => makeRound(settings))
+
+  const [round, setRound] = useState(() => buildRound(settings))
   const [choiceStates, setChoiceStates] = useState({})
   const [feedback, setFeedback] = useState(null)
-  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false)
   const [audioMessage, setAudioMessage] = useState('Clique sur 🔁 pour activer le son.')
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false)
   const audioRef = useRef(null)
   const timeoutRef = useRef(null)
-  const pendingUnlockPlayback = useRef(false)
+  const pendingPlayRef = useRef(null)
 
   const disabledLetters = useMemo(() => {
     const enabled = new Set(settings.enabledLetters)
@@ -136,6 +147,10 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
+    const element = new Audio()
+    element.preload = 'auto'
+    audioRef.current = element
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
@@ -144,98 +159,118 @@ export default function LetterSound({ meta }) {
         audioRef.current.pause()
         audioRef.current.src = ''
         audioRef.current.load()
-        audioRef.current = null
       }
-    }
-  }, [])
-
-  const destroyCurrentAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.src = ''
-      audioRef.current.load()
       audioRef.current = null
     }
   }, [])
 
-  const playCurrentLetterSound = useCallback(
-    ({ initiatedByUser = false } = {}) => {
-      if (!round) {
+  const playSource = useCallback(
+    (src, { initiatedByUser = false } = {}) => {
+      const audioElement = audioRef.current
+      if (!audioElement) {
         return Promise.resolve()
       }
-
-      const src = letterAudios[round.target]
       if (!src) {
         setAudioMessage('Fichier audio manquant pour cette lettre.')
         return Promise.resolve()
       }
 
-      destroyCurrentAudio()
-      const audio = new Audio(src)
-      audio.preload = 'auto'
-      audioRef.current = audio
-
-      const onErrorMessage = initiatedByUser
+      const failureMessage = initiatedByUser
         ? 'Impossible de lire le son. Vérifie que ton appareil n’est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
-      return audio
+      if (audioElement.src !== src) {
+        audioElement.src = src
+        audioElement.load()
+      } else {
+        audioElement.currentTime = 0
+      }
+
+      return audioElement
         .play()
         .then(() => {
           setAudioMessage(null)
         })
         .catch((error) => {
-          setAudioMessage(onErrorMessage)
+          setAudioMessage(failureMessage)
           return Promise.reject(error)
         })
     },
-    [destroyCurrentAudio, round],
+    [],
+  )
+
+  const requestPlayback = useCallback(
+    ({ initiatedByUser = false } = {}) => {
+      if (!round) {
+        return
+      }
+      const src = audioSources[round.target]
+      pendingPlayRef.current = src ? { src, initiatedByUser } : null
+
+      if (!src) {
+        setAudioMessage('Fichier audio manquant pour cette lettre.')
+        return
+      }
+
+      if (!isAudioUnlocked && !initiatedByUser) {
+        setAudioMessage('Clique sur 🔁 pour activer le son.')
+        return
+      }
+
+      pendingPlayRef.current = null
+      playSource(src, { initiatedByUser }).catch(() => {})
+    },
+    [isAudioUnlocked, playSource, round],
   )
 
   useEffect(() => {
-    if (isAudioUnlocked) {
+    if (!isAudioUnlocked) {
       return undefined
     }
+
+    if (pendingPlayRef.current) {
+      const { src } = pendingPlayRef.current
+      pendingPlayRef.current = null
+      playSource(src, { initiatedByUser: true }).catch(() => {})
+    }
+
+    return undefined
+  }, [isAudioUnlocked, playSource])
+
+  useEffect(() => {
     function unlock() {
       setIsAudioUnlocked(true)
-      if (audioRef.current) {
-        pendingUnlockPlayback.current = false
-        playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
-      } else {
-        pendingUnlockPlayback.current = true
-      }
     }
+
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
+
     return () => {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
     }
-  }, [isAudioUnlocked, playCurrentLetterSound])
+  }, [])
 
   useEffect(() => {
     if (!round) {
       return undefined
     }
 
-    if (!isAudioUnlocked) {
-      setAudioMessage('Clique sur 🔁 pour activer le son.')
-      return () => {
-        destroyCurrentAudio()
-      }
-    }
-
-    if (pendingUnlockPlayback.current) {
-      pendingUnlockPlayback.current = false
-      playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
-    } else {
-      playCurrentLetterSound().catch(() => {})
-    }
+    requestPlayback()
 
     return () => {
-      destroyCurrentAudio()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
     }
-  }, [round, isAudioUnlocked, destroyCurrentAudio, playCurrentLetterSound])
+  }, [round, requestPlayback])
+
+  const advanceRound = useCallback(() => {
+    setChoiceStates({})
+    setFeedback(null)
+    setRound(buildRound(settings))
+  }, [settings])
 
   function handleChoice(letter) {
     if (!round || choiceStates[round.target] === 'success') {
@@ -249,23 +284,20 @@ export default function LetterSound({ meta }) {
         clearTimeout(timeoutRef.current)
       }
       timeoutRef.current = setTimeout(() => {
-        setChoiceStates({})
-        setFeedback(null)
-        setRound(makeRound(settings))
+        advanceRound()
       }, 1200)
     } else {
       setChoiceStates((prev) => ({ ...prev, [letter]: 'error' }))
-      setFeedback("Essaie encore.")
+      setFeedback('Essaie encore.')
     }
   }
 
   function replaySound() {
-    const hasRound = Boolean(round)
-    if (!hasRound) {
+    if (!round) {
       return
     }
     setIsAudioUnlocked(true)
-    playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
+    requestPlayback({ initiatedByUser: true })
   }
 
   if (!round) {
