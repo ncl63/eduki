@@ -7,6 +7,13 @@ export const EXERCISES = [
     settingsPath: '/settings/letters',
   },
   {
+    id: 'letter-sound',
+    titre: 'Écoute la lettre',
+    niveau: 'CP',
+    description: "Écoute le son et sélectionne la lettre correspondante.",
+    settingsPath: '/settings/letter-sound',
+  },
+  {
     id: 'feeding',
     titre: 'Mangeoire fantôme',
     niveau: 'CP',
