@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const SETTINGS_KEY = 'settings_letter_sound_v1'
 const DEFAULT_ENABLED = LETTERS
-const CHOICES_PER_ROUND = 6
+export const MIN_CHOICES_PER_ROUND = 2
+export const MAX_CHOICES_PER_ROUND = 12
+export const DEFAULT_CHOICES_PER_ROUND = 6
 
 const letterAudios = Object.fromEntries(
   LETTERS.map((letter) => [letter, new URL(`../Lettersound/${letter}.m4a`, import.meta.url).href]),
@@ -12,6 +14,7 @@ const letterAudios = Object.fromEntries(
 
 export const DEFAULT_SOUND_SETTINGS = {
   enabledLetters: [...DEFAULT_ENABLED],
+  choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
 }
 
 export function sanitizeLetterSoundSettings(settings) {
@@ -20,7 +23,14 @@ export function sanitizeLetterSoundSettings(settings) {
     .map((letter) => (typeof letter === 'string' ? letter.toUpperCase() : ''))
     .filter((letter) => LETTERS.includes(letter))
   const unique = Array.from(new Set(normalized))
-  return { enabledLetters: unique }
+  const requestedChoices = Number.isFinite(settings?.choicesPerRound)
+    ? Math.floor(settings.choicesPerRound)
+    : DEFAULT_CHOICES_PER_ROUND
+  const boundedChoices = Math.min(
+    MAX_CHOICES_PER_ROUND,
+    Math.max(MIN_CHOICES_PER_ROUND, requestedChoices),
+  )
+  return { enabledLetters: unique, choicesPerRound: boundedChoices }
 }
 
 export function loadLetterSoundSettings() {
@@ -30,11 +40,11 @@ export function loadLetterSoundSettings() {
   try {
     const stored = window.localStorage.getItem(SETTINGS_KEY)
     if (!stored) {
-      return { ...DEFAULT_SOUND_SETTINGS }
+      return sanitizeLetterSoundSettings({ ...DEFAULT_SOUND_SETTINGS })
     }
     return sanitizeLetterSoundSettings(JSON.parse(stored))
   } catch {
-    return { ...DEFAULT_SOUND_SETTINGS }
+    return sanitizeLetterSoundSettings({ ...DEFAULT_SOUND_SETTINGS })
   }
 }
 
@@ -50,11 +60,16 @@ export function saveLetterSoundSettings(settings) {
 }
 
 function makeRound(settings) {
-  const enabled = sanitizeLetterSoundSettings(settings).enabledLetters
+  const safeSettings = sanitizeLetterSoundSettings(settings)
+  const enabled = safeSettings.enabledLetters
+  const choicesPerRound = safeSettings.choicesPerRound
+  if (enabled.length === 0) {
+    return makeRound(DEFAULT_SOUND_SETTINGS)
+  }
   const target = enabled[Math.floor(Math.random() * enabled.length)]
   const others = enabled.filter((letter) => letter !== target)
   const shuffled = shuffleArray(others)
-  const optionsCount = Math.min(CHOICES_PER_ROUND, enabled.length)
+  const optionsCount = Math.min(choicesPerRound, enabled.length)
   const options = shuffleArray([target, ...shuffled.slice(0, Math.max(0, optionsCount - 1))])
   return {
     target,
@@ -74,10 +89,10 @@ function shuffleArray(array) {
 export default function LetterSound({ meta }) {
   const [settings] = useState(() => {
     const loaded = loadLetterSoundSettings()
-    if (!loaded.enabledLetters || loaded.enabledLetters.length === 0) {
-      return { enabledLetters: [...DEFAULT_SOUND_SETTINGS.enabledLetters] }
-    }
-    return loaded
+    const withFallback = !loaded.enabledLetters || loaded.enabledLetters.length === 0
+      ? { ...loaded, enabledLetters: [...DEFAULT_SOUND_SETTINGS.enabledLetters] }
+      : loaded
+    return sanitizeLetterSoundSettings(withFallback)
   })
   const [round, setRound] = useState(() => makeRound(settings))
   const [choiceStates, setChoiceStates] = useState({})
@@ -173,9 +188,10 @@ export default function LetterSound({ meta }) {
           <button
             type="button"
             onClick={replaySound}
-            className="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-500"
+            aria-label="Réécouter la lettre"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-indigo-600 text-white text-3xl shadow hover:bg-indigo-500 flex items-center justify-center"
           >
-            ▶️ Réécouter
+            🔁
           </button>
           <p className="text-sm text-gray-600">Clique sur la lettre que tu entends.</p>
         </div>
@@ -183,13 +199,13 @@ export default function LetterSound({ meta }) {
 
       <main className="flex-1 flex flex-col gap-4 items-stretch">
         <div className="flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 h-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 h-full">
             {round.options.map((letter) => (
               <button
                 key={letter}
                 type="button"
                 onClick={() => handleChoice(letter)}
-                className={`rounded-2xl border-2 text-4xl font-bold tracking-wide transition-all px-4 py-6 shadow-sm ${getButtonClasses(
+                className={`rounded-3xl border-4 text-5xl sm:text-6xl font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(
                   choiceStates[letter],
                 )}`}
               >
@@ -213,10 +229,10 @@ export default function LetterSound({ meta }) {
 function getButtonClasses(state) {
   switch (state) {
     case 'success':
-      return 'bg-green-100 border-green-300 text-green-700'
+      return 'bg-green-100 border-green-400 text-green-700 shadow-lg'
     case 'error':
-      return 'bg-red-100 border-red-300 text-red-600'
+      return 'bg-red-100 border-red-400 text-red-600 shadow-lg'
     default:
-      return 'bg-white border-indigo-200 text-indigo-900 hover:border-indigo-400 hover:-translate-y-0.5'
+      return 'bg-white border-indigo-200 text-indigo-900 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-xl'
   }
 }
