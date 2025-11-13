@@ -3,14 +3,22 @@ import { Link } from 'react-router-dom'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const SETTINGS_KEY = 'settings_letter_sound_v1'
-const DEFAULT_ENABLED = LETTERS
 export const MIN_CHOICES_PER_ROUND = 2
 export const MAX_CHOICES_PER_ROUND = 12
 export const DEFAULT_CHOICES_PER_ROUND = 6
 
-const letterAudios = Object.fromEntries(
-  LETTERS.map((letter) => [letter, new URL(`../Lettersound/${letter}.m4a`, import.meta.url).href]),
-)
+const letterAudioModules = import.meta.glob('../Lettersound/*.m4a', { eager: true })
+
+const letterAudios = LETTERS.reduce((acc, letter) => {
+  const module = letterAudioModules[`../Lettersound/${letter}.m4a`]
+  if (module) {
+    acc[letter] = module.default ?? module
+  }
+  return acc
+}, {})
+
+const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(letterAudios[letter]))
+const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTERS
 
 export const DEFAULT_SOUND_SETTINGS = {
   enabledLetters: [...DEFAULT_ENABLED],
@@ -21,7 +29,7 @@ export function sanitizeLetterSoundSettings(settings) {
   const enabled = Array.isArray(settings?.enabledLetters) ? settings.enabledLetters : DEFAULT_ENABLED
   const normalized = enabled
     .map((letter) => (typeof letter === 'string' ? letter.toUpperCase() : ''))
-    .filter((letter) => LETTERS.includes(letter))
+    .filter((letter) => AVAILABLE_LETTERS.includes(letter))
   const unique = Array.from(new Set(normalized))
   const requestedChoices = Number.isFinite(settings?.choicesPerRound)
     ? Math.floor(settings.choicesPerRound)
@@ -61,7 +69,7 @@ export function saveLetterSoundSettings(settings) {
 
 function makeRound(settings) {
   const safeSettings = sanitizeLetterSoundSettings(settings)
-  const enabled = safeSettings.enabledLetters
+  const enabled = safeSettings.enabledLetters.length > 0 ? safeSettings.enabledLetters : DEFAULT_ENABLED
   const choicesPerRound = safeSettings.choicesPerRound
   if (enabled.length === 0) {
     return makeRound(DEFAULT_SOUND_SETTINGS)
@@ -72,9 +80,17 @@ function makeRound(settings) {
   const optionsCount = Math.min(choicesPerRound, enabled.length)
   const options = shuffleArray([target, ...shuffled.slice(0, Math.max(0, optionsCount - 1))])
   return {
+    id: generateRoundId(),
     target,
     options,
   }
+}
+
+function generateRoundId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function shuffleArray(array) {
@@ -123,7 +139,11 @@ export default function LetterSound({ meta }) {
     if (audioRef.current) {
       audioRef.current.pause()
     }
-    const audio = new Audio(letterAudios[round.target])
+    const src = letterAudios[round.target]
+    if (!src) {
+      return undefined
+    }
+    const audio = new Audio(src)
     audioRef.current = audio
     audio.play().catch(() => {})
     return () => {
@@ -200,9 +220,9 @@ export default function LetterSound({ meta }) {
       <main className="flex-1 flex flex-col gap-4 items-stretch">
         <div className="flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 h-full">
-            {round.options.map((letter) => (
+            {round.options.map((letter, index) => (
               <button
-                key={letter}
+                key={`${round.id}-${index}`}
                 type="button"
                 onClick={() => handleChoice(letter)}
                 className={`rounded-3xl border-4 text-5xl sm:text-6xl font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(
