@@ -124,6 +124,8 @@ export default function LetterSound({ meta }) {
   const [round, setRound] = useState(() => makeRound(settings))
   const [choiceStates, setChoiceStates] = useState({})
   const [feedback, setFeedback] = useState(null)
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false)
+  const [audioMessage, setAudioMessage] = useState('Clique sur 🔁 pour activer le son.')
   const audioRef = useRef(null)
   const timeoutRef = useRef(null)
 
@@ -144,6 +146,21 @@ export default function LetterSound({ meta }) {
   }, [])
 
   useEffect(() => {
+    if (isAudioUnlocked) {
+      return undefined
+    }
+    function unlock() {
+      setIsAudioUnlocked(true)
+    }
+    window.addEventListener('pointerdown', unlock)
+    window.addEventListener('keydown', unlock)
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+  }, [isAudioUnlocked])
+
+  useEffect(() => {
     if (!round) {
       return undefined
     }
@@ -156,11 +173,20 @@ export default function LetterSound({ meta }) {
     }
     const audio = new Audio(src)
     audioRef.current = audio
-    audio.play().catch(() => {})
+    if (!isAudioUnlocked) {
+      setAudioMessage('Clique sur 🔁 pour activer le son.')
+      return () => {
+        audio.pause()
+      }
+    }
+    setAudioMessage(null)
+    audio.play().catch(() => {
+      setAudioMessage('Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.')
+    })
     return () => {
       audio.pause()
     }
-  }, [round])
+  }, [round, isAudioUnlocked])
 
   function handleChoice(letter) {
     if (!round || choiceStates[round.target] === 'success') {
@@ -188,8 +214,16 @@ export default function LetterSound({ meta }) {
     if (!audioRef.current) {
       return
     }
+    setIsAudioUnlocked(true)
     audioRef.current.currentTime = 0
-    audioRef.current.play().catch(() => {})
+    audioRef.current
+      .play()
+      .then(() => {
+        setAudioMessage(null)
+      })
+      .catch(() => {
+        setAudioMessage('Impossible de lire le son. Vérifie que ton appareil n’est pas en mode silencieux.')
+      })
   }
 
   if (!round) {
@@ -224,7 +258,10 @@ export default function LetterSound({ meta }) {
           >
             🔁
           </button>
-          <p className="text-sm text-gray-600">Clique sur la lettre que tu entends.</p>
+          <div className="text-sm text-gray-600 text-center">
+            <p>Clique sur la lettre que tu entends.</p>
+            {audioMessage && <p className="text-xs text-amber-600 mt-1">{audioMessage}</p>}
+          </div>
         </div>
       </header>
 
