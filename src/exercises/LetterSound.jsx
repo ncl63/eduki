@@ -96,9 +96,13 @@ function buildRound(settings) {
 
   const target = enabled[Math.floor(Math.random() * enabled.length)]
   const others = enabled.filter((letter) => letter !== target)
-  const pool = shuffleArray([target, ...others])
   const optionsCount = Math.min(safeSettings.choicesPerRound, enabled.length)
-  const options = shuffleArray(pool.slice(0, optionsCount))
+
+  // Ensure the target is always present in the options shown to the user.
+  const shuffledOthers = shuffleArray(others)
+  const neededOthers = Math.max(0, optionsCount - 1)
+  const selectedOthers = shuffledOthers.slice(0, neededOthers)
+  const options = shuffleArray([target, ...selectedOthers])
 
   return {
     id: generateRoundId(),
