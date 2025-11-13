@@ -9,13 +9,24 @@ export const DEFAULT_CHOICES_PER_ROUND = 6
 
 const letterAudioModules = import.meta.glob('../Lettersound/*.m4a', { eager: true })
 
-const letterAudios = LETTERS.reduce((acc, letter) => {
+let letterAudios = LETTERS.reduce((acc, letter) => {
   const module = letterAudioModules[`../Lettersound/${letter}.m4a`]
   if (module) {
     acc[letter] = module.default ?? module
   }
   return acc
 }, {})
+
+if (Object.keys(letterAudios).length === 0) {
+  letterAudios = LETTERS.reduce((acc, letter) => {
+    try {
+      acc[letter] = new URL(`../Lettersound/${letter}.m4a`, import.meta.url).href
+    } catch {
+      // ignore missing files in fallback
+    }
+    return acc
+  }, {})
+}
 
 const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(letterAudios[letter]))
 const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTERS
