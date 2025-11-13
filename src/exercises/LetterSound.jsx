@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -128,6 +128,7 @@ export default function LetterSound({ meta }) {
   const [audioMessage, setAudioMessage] = useState('Clique sur 🔁 pour activer le son.')
   const audioRef = useRef(null)
   const timeoutRef = useRef(null)
+  const pendingUnlockPlayback = useRef(false)
 
   const disabledLetters = useMemo(() => {
     const enabled = new Set(settings.enabledLetters)
@@ -141,9 +142,55 @@ export default function LetterSound({ meta }) {
       }
       if (audioRef.current) {
         audioRef.current.pause()
+        audioRef.current.src = ''
+        audioRef.current.load()
+        audioRef.current = null
       }
     }
   }, [])
+
+  const destroyCurrentAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+      audioRef.current.load()
+      audioRef.current = null
+    }
+  }, [])
+
+  const playCurrentLetterSound = useCallback(
+    ({ initiatedByUser = false } = {}) => {
+      if (!round) {
+        return Promise.resolve()
+      }
+
+      const src = letterAudios[round.target]
+      if (!src) {
+        setAudioMessage('Fichier audio manquant pour cette lettre.')
+        return Promise.resolve()
+      }
+
+      destroyCurrentAudio()
+      const audio = new Audio(src)
+      audio.preload = 'auto'
+      audioRef.current = audio
+
+      const onErrorMessage = initiatedByUser
+        ? 'Impossible de lire le son. Vérifie que ton appareil n’est pas en mode silencieux.'
+        : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
+
+      return audio
+        .play()
+        .then(() => {
+          setAudioMessage(null)
+        })
+        .catch((error) => {
+          setAudioMessage(onErrorMessage)
+          return Promise.reject(error)
+        })
+    },
+    [destroyCurrentAudio, round],
+  )
 
   useEffect(() => {
     if (isAudioUnlocked) {
@@ -151,6 +198,12 @@ export default function LetterSound({ meta }) {
     }
     function unlock() {
       setIsAudioUnlocked(true)
+      if (audioRef.current) {
+        pendingUnlockPlayback.current = false
+        playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
+      } else {
+        pendingUnlockPlayback.current = true
+      }
     }
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
@@ -158,35 +211,31 @@ export default function LetterSound({ meta }) {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
     }
-  }, [isAudioUnlocked])
+  }, [isAudioUnlocked, playCurrentLetterSound])
 
   useEffect(() => {
     if (!round) {
       return undefined
     }
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
-    const src = letterAudios[round.target]
-    if (!src) {
-      return undefined
-    }
-    const audio = new Audio(src)
-    audioRef.current = audio
+
     if (!isAudioUnlocked) {
       setAudioMessage('Clique sur 🔁 pour activer le son.')
       return () => {
-        audio.pause()
+        destroyCurrentAudio()
       }
     }
-    setAudioMessage(null)
-    audio.play().catch(() => {
-      setAudioMessage('Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.')
-    })
-    return () => {
-      audio.pause()
+
+    if (pendingUnlockPlayback.current) {
+      pendingUnlockPlayback.current = false
+      playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
+    } else {
+      playCurrentLetterSound().catch(() => {})
     }
-  }, [round, isAudioUnlocked])
+
+    return () => {
+      destroyCurrentAudio()
+    }
+  }, [round, isAudioUnlocked, destroyCurrentAudio, playCurrentLetterSound])
 
   function handleChoice(letter) {
     if (!round || choiceStates[round.target] === 'success') {
@@ -211,19 +260,12 @@ export default function LetterSound({ meta }) {
   }
 
   function replaySound() {
-    if (!audioRef.current) {
+    const hasRound = Boolean(round)
+    if (!hasRound) {
       return
     }
     setIsAudioUnlocked(true)
-    audioRef.current.currentTime = 0
-    audioRef.current
-      .play()
-      .then(() => {
-        setAudioMessage(null)
-      })
-      .catch(() => {
-        setAudioMessage('Impossible de lire le son. Vérifie que ton appareil n’est pas en mode silencieux.')
-      })
+    playCurrentLetterSound({ initiatedByUser: true }).catch(() => {})
   }
 
   if (!round) {
