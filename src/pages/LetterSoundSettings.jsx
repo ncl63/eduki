@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import {
   DEFAULT_SOUND_SETTINGS,
   LETTERS,
+  MAX_CHOICES_PER_ROUND,
+  MIN_CHOICES_PER_ROUND,
   loadLetterSoundSettings,
   sanitizeLetterSoundSettings,
   saveLetterSoundSettings,
@@ -21,28 +23,42 @@ export default function LetterSoundSettings() {
       } else {
         enabled.add(letter)
       }
-      const next = sanitizeLetterSoundSettings({ enabledLetters: Array.from(enabled) })
+      const next = sanitizeLetterSoundSettings({
+        ...previous,
+        enabledLetters: Array.from(enabled),
+      })
       saveLetterSoundSettings(next)
       return next
     })
   }
 
   function selectAll() {
-    const next = sanitizeLetterSoundSettings({ enabledLetters: LETTERS })
+    const next = sanitizeLetterSoundSettings({ ...settings, enabledLetters: LETTERS })
     setSettings(next)
     saveLetterSoundSettings(next)
   }
 
   function clearAll() {
-    const next = { enabledLetters: [] }
+    const next = sanitizeLetterSoundSettings({ ...settings, enabledLetters: [] })
     setSettings(next)
     saveLetterSoundSettings(next)
   }
 
   function resetDefaults() {
-    const next = { enabledLetters: [...DEFAULT_SOUND_SETTINGS.enabledLetters] }
+    const next = sanitizeLetterSoundSettings({ ...DEFAULT_SOUND_SETTINGS })
     setSettings(next)
     saveLetterSoundSettings(next)
+  }
+
+  function updateChoices(count) {
+    setSettings((previous) => {
+      const next = sanitizeLetterSoundSettings({
+        ...previous,
+        choicesPerRound: count,
+      })
+      saveLetterSoundSettings(next)
+      return next
+    })
   }
 
   return (
@@ -57,9 +73,28 @@ export default function LetterSoundSettings() {
         </Link>
       </header>
 
-      <section className="space-y-4">
+      <section className="space-y-6">
         <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 text-sm text-indigo-900">
           Choisis les lettres que tu veux faire apparaître dans l'exercice d'écoute. Les réglages sont sauvegardés automatiquement.
+        </div>
+
+        <div className="p-4 rounded-2xl border border-indigo-100 bg-white space-y-3">
+          <h2 className="text-lg font-semibold text-indigo-900">Nombre de lettres proposées</h2>
+          <p className="text-sm text-gray-600">
+            {settings.choicesPerRound} lettre{settings.choicesPerRound > 1 ? 's' : ''} apparaîtront à chaque question.
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500">{MIN_CHOICES_PER_ROUND}</span>
+            <input
+              type="range"
+              min={MIN_CHOICES_PER_ROUND}
+              max={MAX_CHOICES_PER_ROUND}
+              value={settings.choicesPerRound}
+              onChange={(event) => updateChoices(Number(event.target.value))}
+              className="flex-1 accent-indigo-600"
+            />
+            <span className="text-xs text-gray-500">{MAX_CHOICES_PER_ROUND}</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3 text-sm text-gray-600 items-center">
