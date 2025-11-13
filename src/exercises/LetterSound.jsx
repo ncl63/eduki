@@ -31,18 +31,6 @@ if (Object.keys(audioSources).length === 0) {
 const AVAILABLE_LETTERS = LETTERS.filter((letter) => Boolean(audioSources[letter]))
 const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTERS
 
-let sharedAudioElement = null
-function getSharedAudioElement() {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  if (!sharedAudioElement) {
-    sharedAudioElement = new Audio()
-    sharedAudioElement.preload = 'auto'
-  }
-  return sharedAudioElement
-}
-
 export const DEFAULT_SOUND_SETTINGS = {
   enabledLetters: [...DEFAULT_ENABLED],
   choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
@@ -167,7 +155,9 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
-    audioRef.current = getSharedAudioElement()
+    const element = new Audio()
+    element.preload = 'auto'
+    audioRef.current = element
 
     return () => {
       if (timeoutRef.current) {
@@ -175,7 +165,8 @@ export default function LetterSound({ meta }) {
       }
       if (audioRef.current) {
         audioRef.current.pause()
-        audioRef.current.currentTime = 0
+        audioRef.current.src = ''
+        audioRef.current.load()
       }
       audioRef.current = null
     }
