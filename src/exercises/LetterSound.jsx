@@ -184,15 +184,13 @@ export default function LetterSound({ meta }) {
       }
 
       const failureMessage = initiatedByUser
-        ? 'Impossible de lire le son. Vérifie que ton appareil n’est pas en mode silencieux.'
+        ? 'Impossible de lire le son. Vérifie que ton appareil n'est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
-      if (audioElement.src !== src) {
-        audioElement.src = src
-        audioElement.load()
-      } else {
-        audioElement.currentTime = 0
-      }
+      // Always reload the audio source to ensure it plays correctly after page reload
+      audioElement.pause()
+      audioElement.src = src
+      audioElement.load()
 
       return audioElement
         .play()
