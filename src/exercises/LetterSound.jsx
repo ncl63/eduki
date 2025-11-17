@@ -212,7 +212,7 @@ export default function LetterSound({ meta }) {
       }
 
       const failureMessage = initiatedByUser
-        ? 'Impossible de lire le son. Vérifie que ton appareil n'est pas en mode silencieux.'
+        ? 'Impossible de lire le son. Vérifie que ton appareil n\'est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
       // Always reload the audio source to ensure it plays correctly after page reload
