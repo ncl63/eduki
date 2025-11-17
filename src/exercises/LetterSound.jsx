@@ -155,29 +155,40 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
-    const element = new Audio()
-    element.preload = 'auto'
-    audioRef.current = element
+    const createAudioElement = () => {
+      const element = new Audio()
+      element.preload = 'auto'
+      return element
+    }
 
-    // iOS PWA specific: reinitialize audio when app becomes visible
+    audioRef.current = createAudioElement()
+
+    // iOS PWA specific: recreate audio element when app becomes visible
     const handleVisibilityChange = () => {
-      if (!document.hidden && audioRef.current) {
-        // Force audio element to be ready after app reactivation
-        const currentSrc = audioRef.current.src
-        if (currentSrc) {
-          audioRef.current.load()
+      if (!document.hidden) {
+        // Completely recreate audio element after app reactivation
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
         }
+        audioRef.current = createAudioElement()
+        // Force user to interact again to unlock audio on iOS
+        setIsAudioUnlocked(false)
+        setAudioMessage('Clique sur 🔁 pour activer le son.')
       }
     }
 
     // Handle page restore from bfcache (iOS Safari)
     const handlePageShow = (event) => {
-      if (event.persisted && audioRef.current) {
-        // Reinitialize audio element after restore from bfcache
-        const currentSrc = audioRef.current.src
-        if (currentSrc) {
-          audioRef.current.load()
+      if (event.persisted) {
+        // Completely recreate audio element after restore from bfcache
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
         }
+        audioRef.current = createAudioElement()
+        setIsAudioUnlocked(false)
+        setAudioMessage('Clique sur 🔁 pour activer le son.')
       }
     }
 
@@ -274,58 +285,17 @@ export default function LetterSound({ meta }) {
   useEffect(() => {
     function unlock() {
       setIsAudioUnlocked(true)
-      // Save unlock state to localStorage for iOS PWA persistence
-      try {
-        window.localStorage.setItem('audio_unlocked', 'true')
-      } catch {
-        // ignore storage errors
-      }
     }
 
-    // Check if audio was previously unlocked (important for iOS PWA reopening)
-    try {
-      const wasUnlocked = window.localStorage.getItem('audio_unlocked') === 'true'
-      if (wasUnlocked) {
-        setIsAudioUnlocked(true)
-      }
-    } catch {
-      // ignore storage errors
-    }
-
-    // Standard unlock events
+    // Unlock on any user interaction
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
     window.addEventListener('touchstart', unlock)
-
-    // iOS PWA specific: unlock when app becomes visible again
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        unlock()
-      }
-    }
-
-    const handleFocus = () => {
-      unlock()
-    }
-
-    // Handle page restore from bfcache (iOS Safari)
-    const handlePageShow = (event) => {
-      if (event.persisted) {
-        unlock()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
       window.removeEventListener('touchstart', unlock)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
 
