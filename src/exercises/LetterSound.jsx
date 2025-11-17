@@ -155,6 +155,11 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
+    // Initial audio element (will be recreated on each playback for iOS PWA compatibility)
+    const element = new Audio()
+    element.preload = 'auto'
+    audioRef.current = element
+
     const createAudioElement = () => {
       const element = new Audio()
       element.preload = 'auto'
@@ -196,9 +201,6 @@ export default function LetterSound({ meta }) {
     window.addEventListener('pageshow', handlePageShow)
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('pageshow', handlePageShow)
-
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -213,10 +215,6 @@ export default function LetterSound({ meta }) {
 
   const playSource = useCallback(
     (src, { initiatedByUser = false } = {}) => {
-      const audioElement = audioRef.current
-      if (!audioElement) {
-        return Promise.resolve()
-      }
       if (!src) {
         setAudioMessage('Fichier audio manquant pour cette lettre.')
         return Promise.resolve()
@@ -226,12 +224,22 @@ export default function LetterSound({ meta }) {
         ? 'Impossible de lire le son. Vérifie que ton appareil n\'est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
-      // Always reload the audio source to ensure it plays correctly after page reload
-      audioElement.pause()
-      audioElement.src = src
-      audioElement.load()
+      // iOS PWA fix: Create a fresh Audio element for each playback
+      // This ensures the element is never in a corrupted state after app reopening
+      const freshAudio = new Audio()
+      freshAudio.preload = 'auto'
+      freshAudio.src = src
 
-      return audioElement
+      // Clean up old audio element
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+      }
+
+      // Store the new audio element
+      audioRef.current = freshAudio
+
+      return freshAudio
         .play()
         .then(() => {
           setAudioMessage(null)
@@ -287,6 +295,10 @@ export default function LetterSound({ meta }) {
       setIsAudioUnlocked(true)
     }
 
+    // Only unlock on actual user interactions (iOS requirement)
+    window.addEventListener('pointerdown', unlock, { once: false })
+    window.addEventListener('keydown', unlock, { once: false })
+    window.addEventListener('touchstart', unlock, { once: false })
     // Unlock on any user interaction
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
