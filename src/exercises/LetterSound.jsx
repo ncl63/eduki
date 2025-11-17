@@ -228,59 +228,49 @@ export default function LetterSound({ meta }) {
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
       try {
-        // iOS PWA fix: Always recreate AudioContext if suspended (resume() hangs on iOS)
-        const AudioContext = window.AudioContext || window.webkitAudioContext
-        if (!AudioContext) {
-          throw new Error('AudioContext not supported')
+        // iOS PWA fix: Initialize AudioContext if needed
+        if (!audioContextRef.current) {
+          try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext
+            if (AudioContext) {
+              audioContextRef.current = new AudioContext()
+              setDebugInfo('AudioContext created on first play')
+            }
+          } catch (err) {
+            setDebugInfo('AudioContext error: ' + err.message)
+          }
         }
 
-        if (!audioContextRef.current || audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'closed') {
-          // Close old context if exists
-          if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-            try {
-              await audioContextRef.current.close()
-            } catch (e) {
-              // Ignore close errors
-            }
-          }
-          // Create fresh AudioContext
-          audioContextRef.current = new AudioContext()
-          setDebugInfo('AudioContext recreated: ' + audioContextRef.current.state)
-        } else {
+        // iOS PWA fix: Resume AudioContext if suspended
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          setDebugInfo('Resuming AudioContext...')
+          await audioContextRef.current.resume()
+          setDebugInfo('AudioContext resumed: ' + audioContextRef.current.state)
+        } else if (audioContextRef.current) {
           setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
         }
 
-        // Warm up audio device with silent buffer
-        const buffer = audioContextRef.current.createBuffer(1, 1, 22050)
-        const source = audioContextRef.current.createBufferSource()
-        source.buffer = buffer
-        source.connect(audioContextRef.current.destination)
-        source.start(0)
-        setDebugInfo('Audio device warmed up')
+        // iOS PWA fix: Create a fresh Audio element for each playback
+        // This ensures the element is never in a corrupted state after app reopening
+        const freshAudio = new Audio()
+        freshAudio.preload = 'auto'
+        freshAudio.src = src
 
-        // iOS PWA fix: Use AudioContext to play audio instead of HTML5 Audio element
-        // This is required because Audio element doesn't output sound after app swipe
-        setDebugInfo('Fetching audio: ' + src.substring(0, 40))
-        const response = await fetch(src)
-        const arrayBuffer = await response.arrayBuffer()
+        setDebugInfo('Created new Audio, src: ' + src.substring(0, 50))
 
-        setDebugInfo('Decoding audio data...')
-        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
+        // Clean up old audio element
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
+        }
 
-        // Create and play audio source through AudioContext
-        // Note: AudioBufferSourceNode can only be used once, so create a new one each time
-        const sourceNode = audioContextRef.current.createBufferSource()
-        sourceNode.buffer = audioBuffer
-        sourceNode.connect(audioContextRef.current.destination)
+        // Store the new audio element
+        audioRef.current = freshAudio
 
-        setDebugInfo('Playing via AudioContext...')
-        sourceNode.start(0)
-
-        // Store reference (but don't try to stop it - it's single use)
-        audioRef.current = sourceNode
-
+        setDebugInfo('Attempting play...')
+        await freshAudio.play()
         setAudioMessage(null)
-        setDebugInfo('Playing successfully via AudioContext!')
+        setDebugInfo('Playing successfully!')
       } catch (error) {
         setAudioMessage(failureMessage)
         setDebugInfo('Play error: ' + error.name + ' - ' + error.message)
@@ -334,6 +324,10 @@ export default function LetterSound({ meta }) {
     }
 
     // Only unlock on actual user interactions (iOS requirement)
+    window.addEventListener('pointerdown', unlock, { once: false })
+    window.addEventListener('keydown', unlock, { once: false })
+    window.addEventListener('touchstart', unlock, { once: false })
+    // Unlock on any user interaction
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
     window.addEventListener('touchstart', unlock)
