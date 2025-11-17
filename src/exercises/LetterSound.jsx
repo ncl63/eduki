@@ -145,9 +145,11 @@ export default function LetterSound({ meta }) {
   const [feedback, setFeedback] = useState(null)
   const [audioMessage, setAudioMessage] = useState('Clique sur 🔁 pour activer le son.')
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false)
+  const [debugInfo, setDebugInfo] = useState('') // Debug visible
   const audioRef = useRef(null)
   const timeoutRef = useRef(null)
   const pendingPlayRef = useRef(null)
+  const audioContextRef = useRef(null)
 
   const disabledLetters = useMemo(() => {
     const enabled = new Set(settings.enabledLetters)
@@ -214,9 +216,10 @@ export default function LetterSound({ meta }) {
   }, [])
 
   const playSource = useCallback(
-    (src, { initiatedByUser = false } = {}) => {
+    async (src, { initiatedByUser = false } = {}) => {
       if (!src) {
         setAudioMessage('Fichier audio manquant pour cette lettre.')
+        setDebugInfo('No src provided')
         return Promise.resolve()
       }
 
@@ -224,30 +227,55 @@ export default function LetterSound({ meta }) {
         ? 'Impossible de lire le son. Vérifie que ton appareil n\'est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
-      // iOS PWA fix: Create a fresh Audio element for each playback
-      // This ensures the element is never in a corrupted state after app reopening
-      const freshAudio = new Audio()
-      freshAudio.preload = 'auto'
-      freshAudio.src = src
+      try {
+        // iOS PWA fix: Initialize AudioContext if needed
+        if (!audioContextRef.current) {
+          try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext
+            if (AudioContext) {
+              audioContextRef.current = new AudioContext()
+              setDebugInfo('AudioContext created on first play')
+            }
+          } catch (err) {
+            setDebugInfo('AudioContext error: ' + err.message)
+          }
+        }
 
-      // Clean up old audio element
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ''
+        // iOS PWA fix: Resume AudioContext if suspended
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          setDebugInfo('Resuming AudioContext...')
+          await audioContextRef.current.resume()
+          setDebugInfo('AudioContext resumed: ' + audioContextRef.current.state)
+        } else if (audioContextRef.current) {
+          setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
+        }
+
+        // iOS PWA fix: Create a fresh Audio element for each playback
+        // This ensures the element is never in a corrupted state after app reopening
+        const freshAudio = new Audio()
+        freshAudio.preload = 'auto'
+        freshAudio.src = src
+
+        setDebugInfo('Created new Audio, src: ' + src.substring(0, 50))
+
+        // Clean up old audio element
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
+        }
+
+        // Store the new audio element
+        audioRef.current = freshAudio
+
+        setDebugInfo('Attempting play...')
+        await freshAudio.play()
+        setAudioMessage(null)
+        setDebugInfo('Playing successfully!')
+      } catch (error) {
+        setAudioMessage(failureMessage)
+        setDebugInfo('Play error: ' + error.name + ' - ' + error.message)
+        return Promise.reject(error)
       }
-
-      // Store the new audio element
-      audioRef.current = freshAudio
-
-      return freshAudio
-        .play()
-        .then(() => {
-          setAudioMessage(null)
-        })
-        .catch((error) => {
-          setAudioMessage(failureMessage)
-          return Promise.reject(error)
-        })
     },
     [],
   )
@@ -395,6 +423,7 @@ export default function LetterSound({ meta }) {
           <div className="text-sm text-gray-600 text-center">
             <p>Clique sur la lettre que tu entends.</p>
             {audioMessage && <p className="text-xs text-amber-600 mt-1">{audioMessage}</p>}
+            {debugInfo && <p className="text-xs text-blue-600 mt-1 font-mono">[Debug] {debugInfo}</p>}
           </div>
         </div>
       </header>
