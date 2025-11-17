@@ -228,30 +228,26 @@ export default function LetterSound({ meta }) {
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
       try {
-        // iOS PWA fix: Initialize AudioContext if needed
-        if (!audioContextRef.current) {
-          try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext
-            if (AudioContext) {
-              audioContextRef.current = new AudioContext()
-              setDebugInfo('AudioContext created on first play')
+        // iOS PWA fix: Always recreate AudioContext if suspended (resume() hangs on iOS)
+        const AudioContext = window.AudioContext || window.webkitAudioContext
+        if (AudioContext) {
+          if (!audioContextRef.current || audioContextRef.current.state === 'suspended') {
+            // Close old context if exists
+            if (audioContextRef.current) {
+              try {
+                await audioContextRef.current.close()
+              } catch (e) {
+                // Ignore close errors
+              }
             }
-          } catch (err) {
-            setDebugInfo('AudioContext error: ' + err.message)
+            // Create fresh AudioContext
+            audioContextRef.current = new AudioContext()
+            setDebugInfo('AudioContext recreated: ' + audioContextRef.current.state)
+          } else {
+            setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
           }
-        }
 
-        // iOS PWA fix: Resume AudioContext if suspended
-        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-          setDebugInfo('Resuming AudioContext...')
-          await audioContextRef.current.resume()
-          setDebugInfo('AudioContext resumed: ' + audioContextRef.current.state)
-        } else if (audioContextRef.current) {
-          setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
-        }
-
-        // iOS PWA fix: Warm up audio device with silent buffer
-        if (audioContextRef.current) {
+          // Warm up audio device with silent buffer
           const buffer = audioContextRef.current.createBuffer(1, 1, 22050)
           const source = audioContextRef.current.createBufferSource()
           source.buffer = buffer
@@ -334,10 +330,6 @@ export default function LetterSound({ meta }) {
     }
 
     // Only unlock on actual user interactions (iOS requirement)
-    window.addEventListener('pointerdown', unlock, { once: false })
-    window.addEventListener('keydown', unlock, { once: false })
-    window.addEventListener('touchstart', unlock, { once: false })
-    // Unlock on any user interaction
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
     window.addEventListener('touchstart', unlock)
