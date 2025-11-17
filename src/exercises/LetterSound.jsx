@@ -160,6 +160,46 @@ export default function LetterSound({ meta }) {
     element.preload = 'auto'
     audioRef.current = element
 
+    const createAudioElement = () => {
+      const element = new Audio()
+      element.preload = 'auto'
+      return element
+    }
+
+    audioRef.current = createAudioElement()
+
+    // iOS PWA specific: recreate audio element when app becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Completely recreate audio element after app reactivation
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
+        }
+        audioRef.current = createAudioElement()
+        // Force user to interact again to unlock audio on iOS
+        setIsAudioUnlocked(false)
+        setAudioMessage('Clique sur 🔁 pour activer le son.')
+      }
+    }
+
+    // Handle page restore from bfcache (iOS Safari)
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        // Completely recreate audio element after restore from bfcache
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
+        }
+        audioRef.current = createAudioElement()
+        setIsAudioUnlocked(false)
+        setAudioMessage('Clique sur 🔁 pour activer le son.')
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
@@ -259,6 +299,10 @@ export default function LetterSound({ meta }) {
     window.addEventListener('pointerdown', unlock, { once: false })
     window.addEventListener('keydown', unlock, { once: false })
     window.addEventListener('touchstart', unlock, { once: false })
+    // Unlock on any user interaction
+    window.addEventListener('pointerdown', unlock)
+    window.addEventListener('keydown', unlock)
+    window.addEventListener('touchstart', unlock)
 
     return () => {
       window.removeEventListener('pointerdown', unlock)
