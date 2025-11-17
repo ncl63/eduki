@@ -234,9 +234,9 @@ export default function LetterSound({ meta }) {
           throw new Error('AudioContext not supported')
         }
 
-        if (!audioContextRef.current || audioContextRef.current.state === 'suspended') {
+        if (!audioContextRef.current || audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'closed') {
           // Close old context if exists
-          if (audioContextRef.current) {
+          if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
             try {
               await audioContextRef.current.close()
             } catch (e) {
@@ -267,16 +267,8 @@ export default function LetterSound({ meta }) {
         setDebugInfo('Decoding audio data...')
         const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
 
-        // Stop any currently playing source
-        if (audioRef.current) {
-          try {
-            audioRef.current.stop()
-          } catch (e) {
-            // Ignore if not started
-          }
-        }
-
         // Create and play audio source through AudioContext
+        // Note: AudioBufferSourceNode can only be used once, so create a new one each time
         const sourceNode = audioContextRef.current.createBufferSource()
         sourceNode.buffer = audioBuffer
         sourceNode.connect(audioContextRef.current.destination)
@@ -284,7 +276,7 @@ export default function LetterSound({ meta }) {
         setDebugInfo('Playing via AudioContext...')
         sourceNode.start(0)
 
-        // Store reference to stop later if needed
+        // Store reference (but don't try to stop it - it's single use)
         audioRef.current = sourceNode
 
         setAudioMessage(null)
