@@ -230,53 +230,65 @@ export default function LetterSound({ meta }) {
       try {
         // iOS PWA fix: Always recreate AudioContext if suspended (resume() hangs on iOS)
         const AudioContext = window.AudioContext || window.webkitAudioContext
-        if (AudioContext) {
-          if (!audioContextRef.current || audioContextRef.current.state === 'suspended') {
-            // Close old context if exists
-            if (audioContextRef.current) {
-              try {
-                await audioContextRef.current.close()
-              } catch (e) {
-                // Ignore close errors
-              }
+        if (!AudioContext) {
+          throw new Error('AudioContext not supported')
+        }
+
+        if (!audioContextRef.current || audioContextRef.current.state === 'suspended') {
+          // Close old context if exists
+          if (audioContextRef.current) {
+            try {
+              await audioContextRef.current.close()
+            } catch (e) {
+              // Ignore close errors
             }
-            // Create fresh AudioContext
-            audioContextRef.current = new AudioContext()
-            setDebugInfo('AudioContext recreated: ' + audioContextRef.current.state)
-          } else {
-            setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
           }
-
-          // Warm up audio device with silent buffer
-          const buffer = audioContextRef.current.createBuffer(1, 1, 22050)
-          const source = audioContextRef.current.createBufferSource()
-          source.buffer = buffer
-          source.connect(audioContextRef.current.destination)
-          source.start(0)
-          setDebugInfo('Audio device warmed up')
+          // Create fresh AudioContext
+          audioContextRef.current = new AudioContext()
+          setDebugInfo('AudioContext recreated: ' + audioContextRef.current.state)
+        } else {
+          setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
         }
 
-        // iOS PWA fix: Create a fresh Audio element for each playback
-        // This ensures the element is never in a corrupted state after app reopening
-        const freshAudio = new Audio()
-        freshAudio.preload = 'auto'
-        freshAudio.src = src
+        // Warm up audio device with silent buffer
+        const buffer = audioContextRef.current.createBuffer(1, 1, 22050)
+        const source = audioContextRef.current.createBufferSource()
+        source.buffer = buffer
+        source.connect(audioContextRef.current.destination)
+        source.start(0)
+        setDebugInfo('Audio device warmed up')
 
-        setDebugInfo('Created new Audio, src: ' + src.substring(0, 50))
+        // iOS PWA fix: Use AudioContext to play audio instead of HTML5 Audio element
+        // This is required because Audio element doesn't output sound after app swipe
+        setDebugInfo('Fetching audio: ' + src.substring(0, 40))
+        const response = await fetch(src)
+        const arrayBuffer = await response.arrayBuffer()
 
-        // Clean up old audio element
+        setDebugInfo('Decoding audio data...')
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
+
+        // Stop any currently playing source
         if (audioRef.current) {
-          audioRef.current.pause()
-          audioRef.current.src = ''
+          try {
+            audioRef.current.stop()
+          } catch (e) {
+            // Ignore if not started
+          }
         }
 
-        // Store the new audio element
-        audioRef.current = freshAudio
+        // Create and play audio source through AudioContext
+        const sourceNode = audioContextRef.current.createBufferSource()
+        sourceNode.buffer = audioBuffer
+        sourceNode.connect(audioContextRef.current.destination)
 
-        setDebugInfo('Attempting play...')
-        await freshAudio.play()
+        setDebugInfo('Playing via AudioContext...')
+        sourceNode.start(0)
+
+        // Store reference to stop later if needed
+        audioRef.current = sourceNode
+
         setAudioMessage(null)
-        setDebugInfo('Playing successfully!')
+        setDebugInfo('Playing successfully via AudioContext!')
       } catch (error) {
         setAudioMessage(failureMessage)
         setDebugInfo('Play error: ' + error.name + ' - ' + error.message)
