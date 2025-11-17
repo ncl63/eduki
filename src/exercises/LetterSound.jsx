@@ -250,6 +250,16 @@ export default function LetterSound({ meta }) {
           setDebugInfo('AudioContext state: ' + audioContextRef.current.state)
         }
 
+        // iOS PWA fix: Warm up audio device with silent buffer
+        if (audioContextRef.current) {
+          const buffer = audioContextRef.current.createBuffer(1, 1, 22050)
+          const source = audioContextRef.current.createBufferSource()
+          source.buffer = buffer
+          source.connect(audioContextRef.current.destination)
+          source.start(0)
+          setDebugInfo('Audio device warmed up')
+        }
+
         // iOS PWA fix: Create a fresh Audio element for each playback
         // This ensures the element is never in a corrupted state after app reopening
         const freshAudio = new Audio()
