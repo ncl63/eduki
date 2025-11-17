@@ -155,39 +155,12 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
+    // Initial audio element (will be recreated on each playback for iOS PWA compatibility)
     const element = new Audio()
     element.preload = 'auto'
     audioRef.current = element
 
-    // iOS PWA specific: reinitialize audio when app becomes visible
-    const handleVisibilityChange = () => {
-      if (!document.hidden && audioRef.current) {
-        // Force audio element to be ready after app reactivation
-        const currentSrc = audioRef.current.src
-        if (currentSrc) {
-          audioRef.current.load()
-        }
-      }
-    }
-
-    // Handle page restore from bfcache (iOS Safari)
-    const handlePageShow = (event) => {
-      if (event.persisted && audioRef.current) {
-        // Reinitialize audio element after restore from bfcache
-        const currentSrc = audioRef.current.src
-        if (currentSrc) {
-          audioRef.current.load()
-        }
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('pageshow', handlePageShow)
-
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('pageshow', handlePageShow)
-
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -202,10 +175,6 @@ export default function LetterSound({ meta }) {
 
   const playSource = useCallback(
     (src, { initiatedByUser = false } = {}) => {
-      const audioElement = audioRef.current
-      if (!audioElement) {
-        return Promise.resolve()
-      }
       if (!src) {
         setAudioMessage('Fichier audio manquant pour cette lettre.')
         return Promise.resolve()
@@ -215,12 +184,22 @@ export default function LetterSound({ meta }) {
         ? 'Impossible de lire le son. Vérifie que ton appareil n\'est pas en mode silencieux.'
         : 'Ton navigateur a bloqué la lecture automatique. Clique sur 🔁 pour écouter.'
 
-      // Always reload the audio source to ensure it plays correctly after page reload
-      audioElement.pause()
-      audioElement.src = src
-      audioElement.load()
+      // iOS PWA fix: Create a fresh Audio element for each playback
+      // This ensures the element is never in a corrupted state after app reopening
+      const freshAudio = new Audio()
+      freshAudio.preload = 'auto'
+      freshAudio.src = src
 
-      return audioElement
+      // Clean up old audio element
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+      }
+
+      // Store the new audio element
+      audioRef.current = freshAudio
+
+      return freshAudio
         .play()
         .then(() => {
           setAudioMessage(null)
@@ -274,58 +253,17 @@ export default function LetterSound({ meta }) {
   useEffect(() => {
     function unlock() {
       setIsAudioUnlocked(true)
-      // Save unlock state to localStorage for iOS PWA persistence
-      try {
-        window.localStorage.setItem('audio_unlocked', 'true')
-      } catch {
-        // ignore storage errors
-      }
     }
 
-    // Check if audio was previously unlocked (important for iOS PWA reopening)
-    try {
-      const wasUnlocked = window.localStorage.getItem('audio_unlocked') === 'true'
-      if (wasUnlocked) {
-        setIsAudioUnlocked(true)
-      }
-    } catch {
-      // ignore storage errors
-    }
-
-    // Standard unlock events
-    window.addEventListener('pointerdown', unlock)
-    window.addEventListener('keydown', unlock)
-    window.addEventListener('touchstart', unlock)
-
-    // iOS PWA specific: unlock when app becomes visible again
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        unlock()
-      }
-    }
-
-    const handleFocus = () => {
-      unlock()
-    }
-
-    // Handle page restore from bfcache (iOS Safari)
-    const handlePageShow = (event) => {
-      if (event.persisted) {
-        unlock()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('pageshow', handlePageShow)
+    // Only unlock on actual user interactions (iOS requirement)
+    window.addEventListener('pointerdown', unlock, { once: false })
+    window.addEventListener('keydown', unlock, { once: false })
+    window.addEventListener('touchstart', unlock, { once: false })
 
     return () => {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
       window.removeEventListener('touchstart', unlock)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
 
