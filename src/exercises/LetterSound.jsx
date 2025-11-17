@@ -159,7 +159,35 @@ export default function LetterSound({ meta }) {
     element.preload = 'auto'
     audioRef.current = element
 
+    // iOS PWA specific: reinitialize audio when app becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden && audioRef.current) {
+        // Force audio element to be ready after app reactivation
+        const currentSrc = audioRef.current.src
+        if (currentSrc) {
+          audioRef.current.load()
+        }
+      }
+    }
+
+    // Handle page restore from bfcache (iOS Safari)
+    const handlePageShow = (event) => {
+      if (event.persisted && audioRef.current) {
+        // Reinitialize audio element after restore from bfcache
+        const currentSrc = audioRef.current.src
+        if (currentSrc) {
+          audioRef.current.load()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pageshow', handlePageShow)
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
+
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -246,14 +274,58 @@ export default function LetterSound({ meta }) {
   useEffect(() => {
     function unlock() {
       setIsAudioUnlocked(true)
+      // Save unlock state to localStorage for iOS PWA persistence
+      try {
+        window.localStorage.setItem('audio_unlocked', 'true')
+      } catch {
+        // ignore storage errors
+      }
     }
 
+    // Check if audio was previously unlocked (important for iOS PWA reopening)
+    try {
+      const wasUnlocked = window.localStorage.getItem('audio_unlocked') === 'true'
+      if (wasUnlocked) {
+        setIsAudioUnlocked(true)
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    // Standard unlock events
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
+    window.addEventListener('touchstart', unlock)
+
+    // iOS PWA specific: unlock when app becomes visible again
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        unlock()
+      }
+    }
+
+    const handleFocus = () => {
+      unlock()
+    }
+
+    // Handle page restore from bfcache (iOS Safari)
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        unlock()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
+      window.removeEventListener('touchstart', unlock)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
 
