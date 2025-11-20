@@ -5,6 +5,7 @@ import ExerciseRunner from './pages/ExerciseRunner.jsx'
 import LettersSettings from './pages/LettersSettings.jsx'
 import LetterSoundSettings from './pages/LetterSoundSettings.jsx'
 import WordRecomposeSettings from './pages/WordRecomposeSettings.jsx'
+import FeedRabbitSettings from './pages/FeedRabbitSettings.jsx'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/settings/letters" element={<LettersSettings />} />
         <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
         <Route path="/settings/words" element={<WordRecomposeSettings />} />
+        <Route path="/settings/feed-rabbit" element={<FeedRabbitSettings />} />
       </Routes>
     </BrowserRouter>
   )
