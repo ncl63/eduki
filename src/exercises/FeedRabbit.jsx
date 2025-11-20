@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 // ============================================================================
@@ -101,7 +101,6 @@ function speak(text) {
 // SONS
 // ============================================================================
 
-// Fonction pour jouer un son simple (bip)
 function playSound(frequency, duration, type = 'sine') {
   if (!('AudioContext' in window || 'webkitAudioContext' in window)) {
     return
@@ -165,6 +164,60 @@ function buildRound(settings) {
 }
 
 // ============================================================================
+// COMPOSANT LAPIN
+// ============================================================================
+
+function Rabbit({ state }) {
+  // state: 'neutral', 'eating', 'happy', 'full'
+
+  const getExpression = () => {
+    switch (state) {
+      case 'happy':
+        return { eyes: '😊', mouth: '😁', bg: 'bg-green-100' }
+      case 'full':
+        return { eyes: '😵', mouth: '🤢', bg: 'bg-red-100' }
+      case 'eating':
+        return { eyes: '😋', mouth: '😋', bg: 'bg-yellow-100' }
+      default:
+        return { eyes: '👀', mouth: '😐', bg: 'bg-gray-100' }
+    }
+  }
+
+  const expression = getExpression()
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Conteneur du lapin */}
+      <div
+        className={`relative w-48 h-48 md:w-64 md:h-64 rounded-full ${expression.bg} border-4 border-gray-300 flex items-center justify-center transition-all duration-300 ${
+          state === 'happy' ? 'animate-bounce scale-110' : ''
+        } ${state === 'eating' ? 'scale-95' : ''} ${state === 'full' ? 'scale-105 shake' : ''}`}
+      >
+        {/* Oreilles */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex gap-8">
+          <div className="w-8 h-24 bg-pink-200 border-2 border-gray-300 rounded-full"></div>
+          <div className="w-8 h-24 bg-pink-200 border-2 border-gray-300 rounded-full"></div>
+        </div>
+
+        {/* Visage */}
+        <div className="flex flex-col items-center gap-2">
+          {/* Yeux */}
+          <div className="text-5xl">{expression.eyes}</div>
+
+          {/* Bouche - Zone de drop */}
+          <div className="text-4xl relative">
+            {expression.mouth}
+          </div>
+        </div>
+      </div>
+
+      {/* Indication visuelle pour donner les carottes */}
+      <div className="text-4xl animate-bounce-slow">👇</div>
+    </div>
+  )
+}
+
+// ============================================================================
 // COMPOSANT PRINCIPAL
 // ============================================================================
 
@@ -172,30 +225,15 @@ export default function FeedRabbit({ meta }) {
   const [settings] = useState(() => loadRabbitSettings())
   const [round, setRound] = useState(() => buildRound(settings))
   const [givenCarrots, setGivenCarrots] = useState(0)
-  const [targetCarrotsStatus, setTargetCarrotsStatus] = useState([]) // Pour barrer les carottes de consigne
+  const [targetCarrotsStatus, setTargetCarrotsStatus] = useState([])
   const [rabbitState, setRabbitState] = useState('neutral') // 'neutral', 'eating', 'happy', 'full'
   const [feedback, setFeedback] = useState(null)
   const [trialCount, setTrialCount] = useState(0)
   const [sessionComplete, setSessionComplete] = useState(false)
-  const [availableCarrots, setAvailableCarrots] = useState([]) // Carottes draggables
 
-  const dropZoneRef = useRef(null)
-  const draggedCarrotRef = useRef(null)
   const timeoutRef = useRef(null)
 
   const animationDuration = settings.animationSpeed === 'fast' ? 1000 : 2000
-
-  // Initialiser les carottes disponibles (6 carottes draggables)
-  useEffect(() => {
-    setAvailableCarrots([
-      { id: 'c1', x: 0, y: 0 },
-      { id: 'c2', x: 0, y: 0 },
-      { id: 'c3', x: 0, y: 0 },
-      { id: 'c4', x: 0, y: 0 },
-      { id: 'c5', x: 0, y: 0 },
-      { id: 'c6', x: 0, y: 0 },
-    ])
-  }, [])
 
   // Annoncer la consigne vocale au début du round
   useEffect(() => {
@@ -223,7 +261,6 @@ export default function FeedRabbit({ meta }) {
     setRabbitState('neutral')
     setFeedback(null)
     setRound(buildRound(settings))
-    setAvailableCarrots((prev) => prev.map((c) => ({ ...c, x: 0, y: 0 })))
   }, [settings, trialCount])
 
   // Fonction pour reset le round en cas d'erreur
@@ -232,11 +269,10 @@ export default function FeedRabbit({ meta }) {
     setTargetCarrotsStatus(Array(round.targetNumber).fill(false))
     setRabbitState('neutral')
     setFeedback(null)
-    setAvailableCarrots((prev) => prev.map((c) => ({ ...c, x: 0, y: 0 })))
   }, [round.targetNumber])
 
-  // Fonction appelée quand une carotte est déposée dans la bouche du lapin
-  const handleCarrotDropped = useCallback(() => {
+  // Fonction appelée quand on clique sur une carotte
+  const handleCarrotClick = useCallback(() => {
     const newCount = givenCarrots + 1
 
     // Jouer le son de croquage
@@ -244,7 +280,11 @@ export default function FeedRabbit({ meta }) {
 
     // Animation "eating"
     setRabbitState('eating')
-    setTimeout(() => setRabbitState('neutral'), 300)
+    setTimeout(() => {
+      if (newCount !== round.targetNumber) {
+        setRabbitState('neutral')
+      }
+    }, 300)
 
     // Barrer une carotte de consigne
     setTargetCarrotsStatus((prev) => {
@@ -288,71 +328,6 @@ export default function FeedRabbit({ meta }) {
     }
   }, [givenCarrots, round.targetNumber, animationDuration, advanceRound, resetRound])
 
-  // Gestion du drag & drop tactile
-  const handleTouchStart = useCallback((e, carrotId) => {
-    e.preventDefault()
-    draggedCarrotRef.current = carrotId
-  }, [])
-
-  const handleTouchMove = useCallback((e) => {
-    if (!draggedCarrotRef.current) return
-    // Optionnel : visualiser le déplacement de la carotte
-    e.preventDefault()
-  }, [])
-
-  const handleTouchEnd = useCallback(
-    (e) => {
-      if (!draggedCarrotRef.current || !dropZoneRef.current) {
-        draggedCarrotRef.current = null
-        return
-      }
-
-      const touch = e.changedTouches[0]
-      const dropZone = dropZoneRef.current.getBoundingClientRect()
-
-      // Vérifier si le doigt est dans la zone de dépôt
-      if (
-        touch.clientX >= dropZone.left &&
-        touch.clientX <= dropZone.right &&
-        touch.clientY >= dropZone.top &&
-        touch.clientY <= dropZone.bottom
-      ) {
-        handleCarrotDropped()
-      }
-
-      draggedCarrotRef.current = null
-    },
-    [handleCarrotDropped]
-  )
-
-  // Gestion du drag & drop souris (desktop)
-  const handleMouseDown = useCallback((e, carrotId) => {
-    draggedCarrotRef.current = carrotId
-  }, [])
-
-  const handleMouseUp = useCallback(
-    (e) => {
-      if (!draggedCarrotRef.current || !dropZoneRef.current) {
-        draggedCarrotRef.current = null
-        return
-      }
-
-      const dropZone = dropZoneRef.current.getBoundingClientRect()
-
-      if (
-        e.clientX >= dropZone.left &&
-        e.clientX <= dropZone.right &&
-        e.clientY >= dropZone.top &&
-        e.clientY <= dropZone.bottom
-      ) {
-        handleCarrotDropped()
-      }
-
-      draggedCarrotRef.current = null
-    },
-    [handleCarrotDropped]
-  )
-
   // Nettoyer les timeouts
   useEffect(() => {
     return () => {
@@ -372,7 +347,7 @@ export default function FeedRabbit({ meta }) {
           <p className="text-xl text-gray-700">
             Matija a terminé {settings.trialsPerSession} exercices !
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link
               to="/"
               className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-lg font-semibold hover:bg-indigo-500"
@@ -400,7 +375,7 @@ export default function FeedRabbit({ meta }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-4">
+    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
       {/* HEADER */}
       <header className="w-full">
         <div className="w-full grid grid-cols-3 items-center">
@@ -431,9 +406,9 @@ export default function FeedRabbit({ meta }) {
       {/* ZONE DE CONSIGNE GRAPHIQUE */}
       {(settings.displayMode === 'graphic' || settings.displayMode === 'both') && (
         <div className="flex flex-col items-center gap-3 bg-amber-50/50 rounded-3xl p-4 border-2 border-amber-200">
-          <p className="text-sm text-gray-700 font-semibold">
+          <p className="text-lg text-gray-700 font-semibold">
             {settings.showDigit && (
-              <span className="text-3xl font-black text-amber-600 mr-2">{round.targetNumber}</span>
+              <span className="text-4xl font-black text-amber-600 mr-2">{round.targetNumber}</span>
             )}
             Carottes à donner :
           </p>
@@ -441,8 +416,8 @@ export default function FeedRabbit({ meta }) {
             {Array.from({ length: round.targetNumber }).map((_, index) => (
               <div
                 key={index}
-                className={`text-5xl transition-all duration-300 ${
-                  targetCarrotsStatus[index] ? 'opacity-30 line-through' : ''
+                className={`text-6xl transition-all duration-300 ${
+                  targetCarrotsStatus[index] ? 'opacity-30 line-through scale-75' : ''
                 }`}
               >
                 🥕
@@ -454,31 +429,12 @@ export default function FeedRabbit({ meta }) {
 
       {/* ZONE CENTRALE : LAPIN */}
       <main className="flex-1 flex flex-col items-center justify-center gap-6">
-        {/* LAPIN */}
-        <div className="relative">
-          <div
-            className={`text-9xl transition-all duration-300 ${
-              rabbitState === 'happy' ? 'animate-bounce scale-110' : ''
-            } ${rabbitState === 'eating' ? 'scale-95' : ''} ${rabbitState === 'full' ? 'scale-105' : ''}`}
-          >
-            {rabbitState === 'happy' && '😊🐰'}
-            {rabbitState === 'full' && '😵🐰'}
-            {(rabbitState === 'neutral' || rabbitState === 'eating') && '🐰'}
-          </div>
-
-          {/* ZONE DE DÉPÔT (bouche du lapin) */}
-          <div
-            ref={dropZoneRef}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full border-4 border-dashed border-amber-400 bg-amber-100/30 flex items-center justify-center"
-          >
-            <span className="text-3xl">👄</span>
-          </div>
-        </div>
+        <Rabbit state={rabbitState} />
 
         {/* FEEDBACK */}
         {feedback && (
           <div
-            className={`text-2xl font-bold px-6 py-3 rounded-2xl ${
+            className={`text-3xl font-bold px-8 py-4 rounded-3xl shadow-lg ${
               rabbitState === 'happy' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}
           >
@@ -487,27 +443,44 @@ export default function FeedRabbit({ meta }) {
         )}
       </main>
 
-      {/* ZONE DES CAROTTES DRAGGABLES */}
+      {/* ZONE DES CAROTTES CLIQUABLES */}
       <footer className="bg-green-50/50 rounded-3xl p-6 border-2 border-green-200">
-        <div className="flex gap-4 items-center justify-center flex-wrap">
-          {availableCarrots.map((carrot) => (
-            <div
-              key={carrot.id}
-              className="text-5xl cursor-grab active:cursor-grabbing hover:scale-110 transition-transform select-none"
-              onTouchStart={(e) => handleTouchStart(e, carrot.id)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onMouseDown={(e) => handleMouseDown(e, carrot.id)}
-              onMouseUp={handleMouseUp}
+        <p className="text-center text-lg font-semibold text-gray-700 mb-4">
+          Clique sur les carottes 👇
+        </p>
+        <div className="flex gap-6 items-center justify-center flex-wrap">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={handleCarrotClick}
+              className="text-7xl hover:scale-125 active:scale-95 transition-transform cursor-pointer select-none"
+              aria-label="Donner une carotte au lapin"
             >
               🥕
-            </div>
+            </button>
           ))}
         </div>
-        <p className="text-center text-sm text-gray-600 mt-3">
-          Glisse les carottes dans la bouche du lapin 👆
-        </p>
       </footer>
+
+      {/* Animation shake pour l'état "full" */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0) scale(1.05); }
+          25% { transform: translateX(-10px) scale(1.05); }
+          75% { transform: translateX(10px) scale(1.05); }
+        }
+        .shake {
+          animation: shake 0.3s ease-in-out infinite;
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   )
 }
