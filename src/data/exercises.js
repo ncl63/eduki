@@ -14,13 +14,6 @@ export const EXERCISES = [
     settingsPath: '/settings/letter-sound',
   },
   {
-    id: 'feeding',
-    titre: 'Mangeoire fantôme',
-    niveau: 'CP',
-    description: 'Glisse les carottes pour nourrir le lapin exactement comme demandé.',
-    settingsPath: null,
-  },
-  {
     id: 'word-recompose',
     titre: 'Recompose le mot',
     niveau: 'CP',
