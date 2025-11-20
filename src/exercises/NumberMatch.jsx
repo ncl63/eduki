@@ -140,7 +140,7 @@ export default function NumberMatch({ meta }) {
 
   // Handle choice selection
   const handleChoice = (choice) => {
-    if (feedback !== null) return; // Already answered
+    if (feedback === 'correct') return; // Already answered correctly
 
     setSelectedChoice(choice);
     const isCorrect = choice === targetNumber;
@@ -149,22 +149,28 @@ export default function NumberMatch({ meta }) {
     if (isCorrect) {
       setScore(prev => prev + 1);
       speak('Bravo !');
+
+      // Auto-advance after correct answer
+      const duration = ANIMATION_DURATIONS[settings.animationSpeed];
+      setTimeout(() => {
+        const nextTrial = currentTrial + 1;
+        if (nextTrial >= settings.trialsPerSession) {
+          setSessionComplete(true);
+          speak(`Terminé ! Tu as ${score + 1} bonnes réponses sur ${settings.trialsPerSession}.`);
+        } else {
+          setCurrentTrial(nextTrial);
+          generateTrial();
+        }
+      }, duration + 1000);
     } else {
       speak('Essaie encore !');
-    }
 
-    // Auto-advance after animation
-    const duration = ANIMATION_DURATIONS[settings.animationSpeed];
-    setTimeout(() => {
-      const nextTrial = currentTrial + 1;
-      if (nextTrial >= settings.trialsPerSession) {
-        setSessionComplete(true);
-        speak(`Terminé ! Tu as ${score + (isCorrect ? 1 : 0)} bonnes réponses sur ${settings.trialsPerSession}.`);
-      } else {
-        setCurrentTrial(nextTrial);
-        generateTrial();
-      }
-    }, duration + 1000);
+      // Clear feedback after a short time to allow retry
+      setTimeout(() => {
+        setFeedback(null);
+        setSelectedChoice(null);
+      }, 800);
+    }
   };
 
   // Restart session
@@ -255,18 +261,18 @@ export default function NumberMatch({ meta }) {
       </header>
 
       {/* Main Exercise Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-16">
         {/* Target Display */}
-        <div className="mb-16">
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-4">
-            <p className="text-center text-gray-600 text-lg mb-4 font-medium">
+        <div className="w-full max-w-5xl">
+          <div className="bg-white rounded-3xl shadow-xl p-12">
+            <p className="text-center text-gray-700 text-2xl mb-8 font-semibold">
               Trouve cette quantité :
             </p>
-            <div className="flex gap-4 justify-center items-center">
+            <div className="flex gap-8 justify-center items-center">
               {Array.from({ length: targetNumber || 0 }).map((_, index) => (
                 <div
                   key={index}
-                  className="text-7xl transition-all duration-300 animate-bounce"
+                  className="text-9xl transition-all duration-300 animate-bounce"
                   style={{ animationDelay: `${index * 100}ms`, animationIterationCount: 1 }}
                 >
                   {emoji}
@@ -277,12 +283,12 @@ export default function NumberMatch({ meta }) {
         </div>
 
         {/* Choices */}
-        <div className="flex gap-6 justify-center flex-wrap max-w-4xl">
+        <div className="flex gap-12 justify-center flex-wrap max-w-6xl">
           {choices.map((choice) => {
             const isSelected = selectedChoice === choice;
             const isCorrect = choice === targetNumber;
             let bgColor = 'bg-white hover:bg-gray-50';
-            let borderColor = 'border-gray-200';
+            let borderColor = 'border-gray-300';
             let transform = 'hover:scale-105';
 
             if (isSelected && feedback === 'correct') {
@@ -299,21 +305,21 @@ export default function NumberMatch({ meta }) {
               <button
                 key={choice}
                 onClick={() => handleChoice(choice)}
-                disabled={feedback !== null}
+                disabled={feedback === 'correct'}
                 className={`
                   ${bgColor} ${borderColor} ${transform}
-                  border-4 rounded-2xl p-8 shadow-lg
+                  border-4 rounded-3xl p-12 shadow-xl
                   transition-all duration-300
                   disabled:cursor-not-allowed
-                  min-w-[200px]
+                  min-w-[280px]
                 `}
               >
-                <div className="flex gap-3 justify-center items-center flex-wrap">
+                <div className="flex gap-6 justify-center items-center flex-wrap">
                   {Array.from({ length: choice }).map((_, index) => (
                     <div
                       key={index}
                       className={`
-                        text-6xl transition-all duration-300
+                        text-8xl transition-all duration-300
                         ${isSelected && feedback === 'incorrect' ? 'animate-shake' : ''}
                       `}
                     >
@@ -327,9 +333,9 @@ export default function NumberMatch({ meta }) {
         </div>
 
         {/* Score Display */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 text-lg">
-            Score : <span className="font-bold text-purple-600">{score}</span>
+        <div className="text-center">
+          <p className="text-gray-700 text-2xl font-medium">
+            Score : <span className="font-bold text-purple-600 text-3xl">{score}</span>
           </p>
         </div>
       </main>
