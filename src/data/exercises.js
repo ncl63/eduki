@@ -27,6 +27,13 @@ export const EXERCISES = [
     description: 'Donne le bon nombre de carottes au lapin (numération 1-3).',
     settingsPath: '/settings/feed-rabbit',
   },
+  {
+    id: 'number-match',
+    titre: 'Correspondance de quantités',
+    niveau: 'Maternelle',
+    description: 'Trouve la quantité qui correspond au modèle (1-3).',
+    settingsPath: '/settings/number-match',
+  },
 ]
 
 export function getExerciseById(id) {
