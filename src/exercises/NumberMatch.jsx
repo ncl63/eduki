@@ -254,25 +254,34 @@ export default function NumberMatch({ meta }) {
           <h1 className="text-xl font-bold text-gray-800">
             {meta?.titre || 'Correspondance de quantités'}
           </h1>
-          <div className="text-sm text-gray-600 font-medium">
-            {currentTrial + 1} / {settings.trialsPerSession}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/settings/number-match')}
+              className="text-2xl hover:scale-110 transition-transform"
+              title="Réglages (désactiver le 3, changer le style, etc.)"
+            >
+              ⚙️
+            </button>
+            <div className="text-sm text-gray-600 font-medium">
+              {currentTrial + 1} / {settings.trialsPerSession}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Exercise Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-16">
-        {/* Target Display */}
+      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-24">
+        {/* Target Display - Zone de consigne très distinctive */}
         <div className="w-full max-w-5xl">
-          <div className="bg-white rounded-3xl shadow-xl p-12">
-            <p className="text-center text-gray-700 text-2xl mb-8 font-semibold">
-              Trouve cette quantité :
+          <div className="bg-gradient-to-br from-purple-400 via-purple-500 to-blue-500 rounded-3xl shadow-2xl p-16 border-8 border-purple-600">
+            <p className="text-center text-white text-4xl mb-12 font-bold drop-shadow-lg">
+              🎯 Trouve cette quantité :
             </p>
-            <div className="flex gap-8 justify-center items-center">
+            <div className="flex gap-12 justify-center items-center bg-white/20 rounded-2xl p-8 backdrop-blur-sm">
               {Array.from({ length: targetNumber || 0 }).map((_, index) => (
                 <div
                   key={index}
-                  className="text-9xl transition-all duration-300 animate-bounce"
+                  className="text-[12rem] transition-all duration-300 animate-bounce drop-shadow-2xl"
                   style={{ animationDelay: `${index * 100}ms`, animationIterationCount: 1 }}
                 >
                   {emoji}
@@ -282,7 +291,12 @@ export default function NumberMatch({ meta }) {
           </div>
         </div>
 
-        {/* Choices */}
+        {/* Séparateur visuel */}
+        <div className="text-3xl text-gray-400 font-bold">
+          ⬇️
+        </div>
+
+        {/* Choices - Options de réponse avec contraste */}
         <div className="flex gap-12 justify-center flex-wrap max-w-6xl">
           {choices.map((choice) => {
             const isSelected = selectedChoice === choice;
@@ -308,18 +322,18 @@ export default function NumberMatch({ meta }) {
                 disabled={feedback === 'correct'}
                 className={`
                   ${bgColor} ${borderColor} ${transform}
-                  border-4 rounded-3xl p-12 shadow-xl
+                  border-4 rounded-3xl p-10 shadow-xl
                   transition-all duration-300
                   disabled:cursor-not-allowed
-                  min-w-[280px]
+                  min-w-[240px]
                 `}
               >
-                <div className="flex gap-6 justify-center items-center flex-wrap">
+                <div className="flex gap-5 justify-center items-center flex-wrap">
                   {Array.from({ length: choice }).map((_, index) => (
                     <div
                       key={index}
                       className={`
-                        text-8xl transition-all duration-300
+                        text-7xl transition-all duration-300
                         ${isSelected && feedback === 'incorrect' ? 'animate-shake' : ''}
                       `}
                     >
