@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace } from '../utils/storage.js'
 
 const SETTINGS_KEY = 'settings_letters_v1'
 const STARS_KEY = 'cp_mvp_stars'
@@ -313,11 +314,11 @@ function makeScatterRound(inputSettings) {
 
   for (let i = targetCount; i < count; i += 1) {
     const source = distractorPool.length > 0 ? distractorPool : fallbackPool
-    const selected = randomPick(source) ?? fallbackPool[0]
+    const selected = randomPick(source) ?? fallbackPool[0] ?? 'B'
     letters.push({ char: selected, isTarget: false })
   }
 
-  shuffle(letters)
+  shuffleInPlace(letters)
 
   return letters.map((entry, index) => ({
     id: `${entry.char}-${index}-${Math.random().toString(36).slice(2, 6)}`,
@@ -339,10 +340,12 @@ export function computeMinDistPercent(count) {
   return 9
 }
 
-function placePointsNoOverlap(count, { minDistPercent, maxAttempts = 2000 }) {
+function placePointsNoOverlap(count, { minDistPercent, maxAttempts = 2500 }) {
   const result = []
   let attempts = 0
   let currentMin = minDistPercent
+  let reductions = 0
+  const maxReductions = 20
   const margin = 8
 
   while (result.length < count && attempts < maxAttempts) {
@@ -353,8 +356,9 @@ function placePointsNoOverlap(count, { minDistPercent, maxAttempts = 2000 }) {
       result.push({ x, y })
     }
     attempts += 1
-    if (attempts % 200 === 0) {
-      currentMin = Math.max(6, currentMin * 0.92)
+    if (attempts % 200 === 0 && reductions < maxReductions) {
+      currentMin = Math.max(4, currentMin * 0.85)
+      reductions += 1
     }
   }
 
@@ -379,74 +383,12 @@ export function fontForStyle(style) {
   }
 }
 
-function clampInt(value, min, max) {
-  const n = Number.isFinite(value) ? Math.round(value) : Number(value) || 0
-  return Math.min(max, Math.max(min, n))
-}
-
-function clampRatio(value, min, max) {
-  const n = Number.isFinite(value) ? value : Number(value)
-  const normalized = Number.isFinite(n) ? n : min
-  return Math.min(max, Math.max(min, normalized))
-}
-
 function randFloat(min, max) {
   return Math.random() * (max - min) + min
-}
-
-function randomPick(array) {
-  if (!array || array.length === 0) {
-    return undefined
-  }
-  const index = Math.floor(Math.random() * array.length)
-  return array[index]
 }
 
 function dist(a, b) {
   const dx = a.x - b.x
   const dy = a.y - b.y
   return Math.sqrt(dx * dx + dy * dy)
-}
-
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[array[i], array[j]] = [array[j], array[i]]
-  }
-}
-
-function loadJSON(key, fallback = null) {
-  if (typeof window === 'undefined') {
-    return fallback
-  }
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch (error) {
-    console.error('loadJSON error', error)
-    return fallback
-  }
-}
-
-function saveJSON(key, value) {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.localStorage.setItem(key, JSON.stringify(value))
-}
-
-function loadInt(key, fallback = 0) {
-  if (typeof window === 'undefined') {
-    return fallback
-  }
-  const raw = window.localStorage.getItem(key)
-  const value = raw == null ? NaN : Number.parseInt(raw, 10)
-  return Number.isNaN(value) ? fallback : value
-}
-
-function saveInt(key, value) {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.localStorage.setItem(key, String(value))
 }

@@ -463,24 +463,6 @@ export default function FeedRabbit({ meta }) {
         </div>
       </footer>
 
-      {/* Animation shake pour l'état "full" */}
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0) scale(1.05); }
-          25% { transform: translateX(-10px) scale(1.05); }
-          75% { transform: translateX(10px) scale(1.05); }
-        }
-        .shake {
-          animation: shake 0.3s ease-in-out infinite;
-        }
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   )
 }

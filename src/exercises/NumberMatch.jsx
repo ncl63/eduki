@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { loadJSON, saveJSON } from '../utils/storage.js'
 
 // Default settings
 export const DEFAULT_SETTINGS = {
@@ -13,27 +14,17 @@ export const DEFAULT_SETTINGS = {
 const STORAGE_KEY = 'settings_number_match_v1';
 
 export function loadNumberMatchSettings() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return sanitizeNumberMatchSettings(parsed);
-    }
-  } catch (e) {
-    console.error('Failed to load settings:', e);
+  const stored = loadJSON(STORAGE_KEY)
+  if (stored) {
+    return sanitizeNumberMatchSettings(stored)
   }
-  return DEFAULT_SETTINGS;
+  return { ...DEFAULT_SETTINGS }
 }
 
 export function saveNumberMatchSettings(settings) {
-  try {
-    const sanitized = sanitizeNumberMatchSettings(settings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
-    return sanitized;
-  } catch (e) {
-    console.error('Failed to save settings:', e);
-    return settings;
-  }
+  const sanitized = sanitizeNumberMatchSettings(settings)
+  saveJSON(STORAGE_KEY, sanitized)
+  return sanitized
 }
 
 export function sanitizeNumberMatchSettings(settings) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { loadJSON, saveJSON, shuffle, randomPick } from '../utils/storage.js'
 
 const SETTINGS_KEY = 'settings_words_v1'
 
@@ -339,40 +340,10 @@ function pickRandomWord(words) {
   if (!Array.isArray(words) || words.length === 0) {
     return DEFAULT_WORDS[0]
   }
-  const index = Math.floor(Math.random() * words.length)
-  return words[index]
-}
-
-function shuffle(array) {
-  const copy = array.slice()
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
+  return randomPick(words) ?? DEFAULT_WORDS[0]
 }
 
 function normalizeLetter(letter) {
   return letter?.toLocaleUpperCase('fr-FR') ?? ''
-}
-
-function loadJSON(key, fallback = null) {
-  if (typeof window === 'undefined') {
-    return fallback
-  }
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch (error) {
-    console.error('loadJSON error', error)
-    return fallback
-  }
-}
-
-function saveJSON(key, value) {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.localStorage.setItem(key, JSON.stringify(value))
 }
 
