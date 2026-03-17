@@ -36,9 +36,7 @@ export const DEFAULT_SOUND_SETTINGS = {
   choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value))
-}
+import { clamp } from '../utils/storage.js'
 
 export function sanitizeLetterSoundSettings(settings) {
   const requestedEnabled = Array.isArray(settings?.enabledLetters)
@@ -156,11 +154,6 @@ export default function LetterSound({ meta }) {
   }, [settings])
 
   useEffect(() => {
-    // Initial audio element (will be recreated on each playback for iOS PWA compatibility)
-    const element = new Audio()
-    element.preload = 'auto'
-    audioRef.current = element
-
     const createAudioElement = () => {
       const element = new Audio()
       element.preload = 'auto'
@@ -202,6 +195,8 @@ export default function LetterSound({ meta }) {
     window.addEventListener('pageshow', handlePageShow)
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pageshow', handlePageShow)
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -309,13 +304,12 @@ export default function LetterSound({ meta }) {
   useEffect(() => {
     function unlock() {
       setIsAudioUnlocked(true)
+      // Remove listeners once unlocked — no need to keep firing
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+      window.removeEventListener('touchstart', unlock)
     }
 
-    // Only unlock on actual user interactions (iOS requirement)
-    window.addEventListener('pointerdown', unlock, { once: false })
-    window.addEventListener('keydown', unlock, { once: false })
-    window.addEventListener('touchstart', unlock, { once: false })
-    // Unlock on any user interaction
     window.addEventListener('pointerdown', unlock)
     window.addEventListener('keydown', unlock)
     window.addEventListener('touchstart', unlock)
