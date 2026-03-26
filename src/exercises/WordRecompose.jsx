@@ -6,11 +6,38 @@ const SETTINGS_KEY = 'settings_words_v1'
 
 export const DEFAULT_WORDS = ['MATIJA', 'LAPIN', 'CAROTTE', 'ECUREUIL', 'PLUMES']
 
+// Calcule des tailles adaptées à la longueur du mot pour éviter le retour à la ligne
+function computeSizes(letterCount) {
+  // Facteur de réduction progressif pour les mots longs
+  const base = Math.min(1, 5 / Math.max(letterCount, 1))
+  const factor = Math.max(0.45, base)
+
+  return {
+    // Tailles des emplacements (slots)
+    slotMin: `clamp(${(4.5 * factor).toFixed(1)}rem, ${(12 * factor).toFixed(0)}vw, 9rem)`,
+    slotHeight: `clamp(${(5 * factor).toFixed(1)}rem, ${(14 * factor).toFixed(0)}vw, 10rem)`,
+    slotFont: `clamp(${(2.5 * factor).toFixed(1)}rem, ${(10 * factor).toFixed(0)}vw, 5rem)`,
+    slotPadX: `clamp(${(0.5 * factor).toFixed(1)}rem, ${(2 * factor).toFixed(0)}vw, 1.5rem)`,
+    slotPadY: `clamp(${(0.5 * factor).toFixed(1)}rem, ${(2 * factor).toFixed(0)}vw, 1.5rem)`,
+    slotGap: `clamp(${(0.75 * factor).toFixed(2)}rem, ${(1.5 * factor).toFixed(1)}vw, 1.5rem)`,
+    // Tailles des boutons de choix
+    choiceMin: `clamp(${(5 * factor).toFixed(1)}rem, ${(15 * factor).toFixed(0)}vw, 11rem)`,
+    choiceFont: `clamp(${(3 * factor).toFixed(1)}rem, ${(8 * factor).toFixed(0)}vw, 5.5rem)`,
+    choicePadX: `clamp(${(1.75 * factor).toFixed(2)}rem, ${(6 * factor).toFixed(0)}vw, 3.75rem)`,
+    choicePadY: `clamp(${(1.25 * factor).toFixed(2)}rem, ${(5 * factor).toFixed(0)}vw, 3.25rem)`,
+    choiceGap: `clamp(${(0.75 * factor).toFixed(2)}rem, ${(1.5 * factor).toFixed(1)}vw, 1.5rem)`,
+    // Taille du mot en en-tête
+    headerFont: `clamp(32px, ${(8 * factor).toFixed(0)}vw, 112px)`,
+    headerGap: `clamp(${(0.25 * factor).toFixed(2)}rem, ${(0.75 * factor).toFixed(1)}vw, 0.75rem)`,
+  }
+}
+
 export default function WordRecompose({ meta }) {
   const [settings, setSettings] = useState(() => loadWordSettings())
   const [round, setRound] = useState(() => makeRound(settings))
   const [feedback, setFeedback] = useState(null)
   const timeoutsRef = useRef([])
+  const sizes = useMemo(() => computeSizes(round.targetLetters.length), [round.targetLetters.length])
 
   useEffect(() => {
     return () => {
@@ -136,7 +163,7 @@ export default function WordRecompose({ meta }) {
             </Link>
           </div>
           <div className="flex justify-center min-w-0">
-            <div className="flex flex-nowrap justify-center gap-3 overflow-x-auto min-w-0">
+            <div className="flex flex-nowrap justify-center overflow-x-auto min-w-0" style={{ gap: sizes.headerGap }}>
               {round.targetLetters.map((char, index) => {
                 const filled = round.slots[index] != null
                 return (
@@ -145,7 +172,7 @@ export default function WordRecompose({ meta }) {
                     className={`font-bold leading-none text-center transition-colors ${
                       filled ? 'text-green-500' : 'text-indigo-900'
                     }`}
-                    style={{ fontSize: 'clamp(32px, 8vw, 112px)' }}
+                    style={{ fontSize: sizes.headerFont }}
                   >
                     {char}
                   </span>
@@ -170,9 +197,9 @@ export default function WordRecompose({ meta }) {
       <main className="flex-1 flex flex-col gap-8">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
-            <div className="w-full flex flex-wrap justify-center gap-6">
+            <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slotGap }}>
               {round.targetLetters.map((char, index) => (
-                <LetterSlot key={`${char}-${index}`} value={round.slots[index]} />
+                <LetterSlot key={`${char}-${index}`} value={round.slots[index]} sizes={sizes} />
               ))}
             </div>
 
@@ -199,11 +226,12 @@ export default function WordRecompose({ meta }) {
           </div>
         </div>
 
-        <div className="w-full flex flex-wrap justify-center gap-6 pb-6">
+        <div className="w-full flex flex-wrap justify-center pb-6" style={{ gap: sizes.choiceGap }}>
           {round.pool.map((letter) => (
             <LetterChoice
               key={letter.id}
               letter={letter}
+              sizes={sizes}
               onClick={() => handleLetterClick(letter.id)}
             />
           ))}
@@ -213,7 +241,7 @@ export default function WordRecompose({ meta }) {
   )
 }
 
-function LetterSlot({ value }) {
+function LetterSlot({ value, sizes }) {
   const filled = value != null
   return (
     <div
@@ -221,12 +249,12 @@ function LetterSlot({ value }) {
         filled ? 'bg-indigo-100 border-indigo-300 text-indigo-900' : 'bg-white border-indigo-200 text-indigo-300'
       }`}
       style={{
-        flex: '1 1 clamp(4.5rem, 12vw, 9rem)',
-        minWidth: 'clamp(4.5rem, 12vw, 9rem)',
-        minHeight: 'clamp(5rem, 14vw, 10rem)',
-        fontSize: 'clamp(2.5rem, 10vw, 5rem)',
-        paddingInline: 'clamp(0.5rem, 2vw, 1.5rem)',
-        paddingBlock: 'clamp(0.5rem, 2vw, 1.5rem)',
+        flex: `1 1 ${sizes.slotMin}`,
+        minWidth: sizes.slotMin,
+        minHeight: sizes.slotHeight,
+        fontSize: sizes.slotFont,
+        paddingInline: sizes.slotPadX,
+        paddingBlock: sizes.slotPadY,
       }}
     >
       {filled ? value : ''}
@@ -234,7 +262,7 @@ function LetterSlot({ value }) {
   )
 }
 
-function LetterChoice({ letter, onClick }) {
+function LetterChoice({ letter, sizes, onClick }) {
   const { char, state } = letter
   let bg = 'bg-white'
   let border = 'border-indigo-200'
@@ -262,11 +290,11 @@ function LetterChoice({ letter, onClick }) {
         state === 'used' ? 'cursor-not-allowed' : 'hover:scale-[1.03]'
       }`}
       style={{
-        minWidth: 'clamp(5rem, 15vw, 11rem)',
-        minHeight: 'clamp(5rem, 15vw, 11rem)',
-        paddingInline: 'clamp(1.75rem, 6vw, 3.75rem)',
-        paddingBlock: 'clamp(1.25rem, 5vw, 3.25rem)',
-        fontSize: 'clamp(3rem, 8vw, 5.5rem)',
+        minWidth: sizes.choiceMin,
+        minHeight: sizes.choiceMin,
+        paddingInline: sizes.choicePadX,
+        paddingBlock: sizes.choicePadY,
+        fontSize: sizes.choiceFont,
       }}
     >
       {char}
