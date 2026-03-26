@@ -184,21 +184,43 @@ export default function WordRecompose({ meta }) {
             </Link>
           </div>
           <div className="flex justify-center min-w-0">
-            <div className="flex flex-nowrap justify-center overflow-x-auto min-w-0" style={{ gap: sizes.slot.gap }}>
-              {round.targetLetters.map((char, index) => {
-                const filled = round.slots[index] != null
-                return (
-                  <span
-                    key={`${char}-${index}`}
-                    className={`font-bold leading-none text-center transition-colors ${
-                      filled ? 'text-green-500' : 'text-indigo-900'
-                    }`}
-                    style={{ fontSize: sizes.headerFont, lineHeight: 1.1 }}
-                  >
-                    {char}
-                  </span>
-                )
-              })}
+            <div className="flex flex-col items-center min-w-0">
+              <div className="flex flex-nowrap justify-center overflow-x-auto min-w-0" style={{ gap: sizes.slot.gap }}>
+                {round.targetLetters.map((char, index) => {
+                  const filled = round.slots[index] != null
+                  return (
+                    <span
+                      key={`${char}-${index}`}
+                      className={`font-bold leading-none text-center transition-colors ${
+                        filled ? 'text-green-500' : 'text-indigo-900'
+                      }`}
+                      style={{ fontSize: sizes.headerFont, lineHeight: 1.1 }}
+                    >
+                      {char}
+                    </span>
+                  )
+                })}
+              </div>
+              {/* Indicateur 👆🏻 sous la lettre en cours dans le mot modèle */}
+              <div className="flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
+                {round.targetLetters.map((char, index) => {
+                  const nextSlotIndex = round.slots.findIndex((slot) => slot == null)
+                  const isCurrent = index === nextSlotIndex
+                  return (
+                    <span
+                      key={`hint-${index}`}
+                      className="text-center select-none"
+                      style={{
+                        fontSize: sizes.headerFont,
+                        lineHeight: 1,
+                        visibility: isCurrent ? 'visible' : 'hidden',
+                      }}
+                    >
+                      👆🏻
+                    </span>
+                  )
+                })}
+              </div>
             </div>
           </div>
           <div className="flex justify-end">
@@ -218,37 +240,14 @@ export default function WordRecompose({ meta }) {
       <main className="flex-1 flex flex-col gap-8">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
-            <div className="w-full flex flex-col items-center gap-1">
-              <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
-                {round.targetLetters.map((char, index) => (
-                  <LetterSlot
-                    key={`${char}-${index}`}
-                    value={round.slots[index]}
-                    sizes={sizes}
-                  />
-                ))}
-              </div>
-              {/* Rangée indicateur 👆🏻 alignée sur les slots */}
-              <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
-                {round.targetLetters.map((char, index) => {
-                  const nextSlotIndex = round.slots.findIndex((slot) => slot == null)
-                  const isCurrent = index === nextSlotIndex
-                  return (
-                    <div
-                      key={`indicator-${index}`}
-                      className="text-center select-none"
-                      style={{
-                        flex: '0 1 auto',
-                        width: sizes.slot.width,
-                        fontSize: sizes.slot.font,
-                        visibility: isCurrent ? 'visible' : 'hidden',
-                      }}
-                    >
-                      👆🏻
-                    </div>
-                  )
-                })}
-              </div>
+            <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
+              {round.targetLetters.map((char, index) => (
+                <LetterSlot
+                  key={`${char}-${index}`}
+                  value={round.slots[index]}
+                  sizes={sizes}
+                />
+              ))}
             </div>
 
             {(() => {
