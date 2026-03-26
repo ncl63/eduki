@@ -10,8 +10,8 @@
 
 | Dossier | Contenu |
 |---|---|
-| `src/exercises/` | 5 exercices (LetterFind, LetterSound, WordRecompose, FeedRabbit, NumberMatch) |
-| `src/pages/` | Home, ExerciseRunner, 5 pages de réglages |
+| `src/exercises/` | 4 exercices (LetterFind, LetterSound, WordRecompose, NumberMatch) |
+| `src/pages/` | Home, ExerciseRunner, 4 pages de réglages |
 | `src/components/` | EnTete, CarteExercice, BarreRecherche, FiltreNiveau |
 | `src/contexts/` | ThemeContext (dark mode) |
 | `src/data/` | Registre des exercices |
@@ -42,15 +42,11 @@ L'algorithme `placePointsNoOverlap()` réduit progressivement la tolérance de d
 
 Les fonctions utilitaires (`loadJSON`, `saveJSON`, sanitization) sont dupliquées dans chaque exercice au lieu d'être mutualisées dans un module `src/utils/`.
 
-### 5. Styles inline dupliqués
-
-`FeedRabbit.jsx` contient un tag `<style>` inline avec l'animation `carrotShake`, déjà définie dans `index.css` (violation DRY).
-
-### 6. Pas de Error Boundary
+### 5. Pas de Error Boundary
 
 Aucun composant de fallback en cas de crash d'un exercice.
 
-### 7. Aucun test
+### 6. Aucun test
 
 Pas de tests unitaires ni d'intégration. Le pipeline CI/CD ne fait que builder.
 
