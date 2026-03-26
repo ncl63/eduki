@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
+import { ProfileProvider } from './contexts/ProfileContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Home from './pages/Home.jsx'
 import ExerciseRunner from './pages/ExerciseRunner.jsx'
@@ -8,22 +9,26 @@ import LettersSettings from './pages/LettersSettings.jsx'
 import LetterSoundSettings from './pages/LetterSoundSettings.jsx'
 import WordRecomposeSettings from './pages/WordRecomposeSettings.jsx'
 import NumberMatchSettings from './pages/NumberMatchSettings.jsx'
+import Suivi from './pages/Suivi.jsx'
 
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/ex/:exerciseId" element={<ExerciseRunner />} />
-            <Route path="/settings/letters" element={<LettersSettings />} />
-            <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
-            <Route path="/settings/words" element={<WordRecomposeSettings />} />
-            <Route path="/settings/number-match" element={<NumberMatchSettings />} />
-          </Routes>
-        </ErrorBoundary>
-      </BrowserRouter>
+      <ProfileProvider>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/ex/:exerciseId" element={<ExerciseRunner />} />
+              <Route path="/settings/letters" element={<LettersSettings />} />
+              <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
+              <Route path="/settings/words" element={<WordRecomposeSettings />} />
+              <Route path="/settings/number-match" element={<NumberMatchSettings />} />
+              <Route path="/suivi" element={<Suivi />} />
+            </Routes>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </ProfileProvider>
     </ThemeProvider>
   )
 }

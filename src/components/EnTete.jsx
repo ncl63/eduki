@@ -1,15 +1,18 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext.jsx'
+import ProfileSelector from './ProfileSelector.jsx'
 
 export default function EnTete() {
   const { isDark, toggleTheme } = useTheme()
 
   return (
     <header className="mb-8">
-      <nav className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between">
+      <nav className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between gap-2">
         <Link to="/" className="hover:underline">Accueil</Link>
-        <button
+        <div className="flex items-center gap-2">
+          <ProfileSelector />
+          <button
           onClick={toggleTheme}
           className="ml-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
@@ -25,6 +28,7 @@ export default function EnTete() {
             </svg>
           )}
         </button>
+        </div>
       </nav>
     </header>
   )
