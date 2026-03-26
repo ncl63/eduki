@@ -2,6 +2,15 @@
 
 @variant dark (.dark &);
 
+/* Police cursive scolaire Belle Allure (Grande Section) */
+@font-face {
+  font-family: 'Belle Allure';
+  src: url('./fonts/BelleAllureGS.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @keyframes bubblePulse {
   0% {
     transform: scale(0.98);

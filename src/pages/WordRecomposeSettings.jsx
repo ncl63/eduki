@@ -6,13 +6,16 @@ import {
   sanitizeWordSettings,
   saveWordSettings,
 } from '../exercises/WordRecompose.jsx'
+import { LETTER_STYLE_OPTIONS, fontForStyle, formatStyleLabel, formatLetterCase } from '../utils/fontStyle.js'
 
 export default function WordRecomposeSettings() {
-  const [textValue, setTextValue] = useState(() => loadWordSettings().words.join('\n'))
+  const [initialSettings] = useState(() => loadWordSettings())
+  const [textValue, setTextValue] = useState(() => initialSettings.words.join('\n'))
+  const [letterStyle, setLetterStyle] = useState(() => initialSettings.letterStyle)
 
   const sanitized = useMemo(
-    () => sanitizeWordSettings({ words: textValue }),
-    [textValue],
+    () => sanitizeWordSettings({ words: textValue, letterStyle }),
+    [textValue, letterStyle],
   )
 
   useEffect(() => {
@@ -21,7 +24,8 @@ export default function WordRecomposeSettings() {
 
   function resetDefaults() {
     setTextValue(DEFAULT_WORDS.join('\n'))
-    saveWordSettings({ words: DEFAULT_WORDS })
+    setLetterStyle('baton')
+    saveWordSettings({ words: DEFAULT_WORDS, letterStyle: 'baton' })
   }
 
   return (
@@ -43,6 +47,32 @@ export default function WordRecomposeSettings() {
         </div>
 
         <form className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="font-semibold text-sm text-gray-700" htmlFor="letterStyle">
+              Style de lettres
+            </label>
+            <select
+              id="letterStyle"
+              value={letterStyle}
+              onChange={(event) => setLetterStyle(event.target.value)}
+              className="w-full px-3 py-2 rounded-xl border bg-white shadow-sm"
+            >
+              {LETTER_STYLE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {formatStyleLabel(option)}
+                </option>
+              ))}
+            </select>
+            <div className="rounded-xl border border-dashed border-indigo-200 p-3 text-center">
+              <span
+                className="text-3xl font-semibold"
+                style={{ fontFamily: fontForStyle(letterStyle) }}
+              >
+                {formatLetterCase('ABC', letterStyle)}
+              </span>
+            </div>
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <label className="font-semibold text-sm text-gray-700" htmlFor="wordsList">
               Liste des mots ({sanitized.words.length})
@@ -64,8 +94,12 @@ export default function WordRecomposeSettings() {
             <label className="font-semibold text-sm text-gray-700">Aperçu</label>
             <div className="rounded-xl border border-dashed border-indigo-200 p-3 bg-white shadow-sm text-sm text-gray-600 space-y-1">
               {sanitized.words.map((word) => (
-                <div key={word} className="font-semibold text-indigo-900">
-                  {word}
+                <div
+                  key={word}
+                  className="font-semibold text-indigo-900"
+                  style={{ fontFamily: fontForStyle(letterStyle) }}
+                >
+                  {formatLetterCase(word, letterStyle)}
                 </div>
               ))}
             </div>

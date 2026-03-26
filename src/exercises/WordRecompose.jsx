@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadJSON, saveJSON, shuffle, randomPick, randomPickAvoiding } from '../utils/storage.js'
 import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
+import { DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
 const SETTINGS_KEY = 'settings_words_v1'
 
@@ -49,6 +50,7 @@ export default function WordRecompose({ meta }) {
   const timeoutsRef = useRef([])
   const { startRound, recordError, completeRound } = useExerciseTracking('word-recompose')
   const sizes = useMemo(() => computeSizes(round.targetLetters.length), [round.targetLetters.length])
+  const fontFamily = fontForStyle(settings.letterStyle)
 
   // Suivi du premier tour
   useEffect(() => {
@@ -193,7 +195,7 @@ export default function WordRecompose({ meta }) {
                   <span
                     key={`${char}-${index}`}
                     className="flex flex-col items-center"
-                    style={{ width: '1em', fontSize: sizes.headerFont }}
+                    style={{ width: '1em', fontSize: sizes.headerFont, fontFamily }}
                   >
                     <span
                       className={`font-bold leading-none text-center transition-colors ${
@@ -201,7 +203,7 @@ export default function WordRecompose({ meta }) {
                       }`}
                       style={{ fontSize: 'inherit', lineHeight: 1.1 }}
                     >
-                      {char}
+                      {formatLetterCase(char, settings.letterStyle)}
                     </span>
                     <span
                       className="select-none text-center"
@@ -241,6 +243,8 @@ export default function WordRecompose({ meta }) {
                   key={`${char}-${index}`}
                   value={round.slots[index]}
                   sizes={sizes}
+                  fontFamily={fontFamily}
+                  letterStyle={settings.letterStyle}
                 />
               ))}
             </div>
@@ -274,6 +278,8 @@ export default function WordRecompose({ meta }) {
               key={letter.id}
               letter={letter}
               sizes={sizes}
+              fontFamily={fontFamily}
+              letterStyle={settings.letterStyle}
               onClick={() => handleLetterClick(letter.id)}
             />
           ))}
@@ -283,7 +289,7 @@ export default function WordRecompose({ meta }) {
   )
 }
 
-function LetterSlot({ value, sizes }) {
+function LetterSlot({ value, sizes, fontFamily, letterStyle }) {
   const filled = value != null
   return (
     <div
@@ -295,14 +301,15 @@ function LetterSlot({ value, sizes }) {
         width: sizes.slot.width,
         height: sizes.slot.height,
         fontSize: sizes.slot.font,
+        fontFamily,
       }}
     >
-      {filled ? value : ''}
+      {filled ? formatLetterCase(value, letterStyle) : ''}
     </div>
   )
 }
 
-function LetterChoice({ letter, sizes, onClick }) {
+function LetterChoice({ letter, sizes, fontFamily, letterStyle, onClick }) {
   const { char, state } = letter
   let bg = 'bg-white'
   let border = 'border-indigo-200'
@@ -335,9 +342,10 @@ function LetterChoice({ letter, sizes, onClick }) {
         paddingInline: sizes.choice.padX,
         paddingBlock: sizes.choice.padY,
         fontSize: sizes.choice.font,
+        fontFamily,
       }}
     >
-      {char}
+      {formatLetterCase(char, letterStyle)}
     </button>
   )
 }
@@ -345,7 +353,7 @@ function LetterChoice({ letter, sizes, onClick }) {
 export function loadWordSettings() {
   const stored = loadJSON(SETTINGS_KEY)
   if (!stored) {
-    return { words: DEFAULT_WORDS }
+    return { words: DEFAULT_WORDS, letterStyle: DEFAULT_LETTER_STYLE }
   }
   return sanitizeWordSettings(stored)
 }
@@ -376,11 +384,13 @@ export function sanitizeWordSettings(raw) {
 
   const unique = Array.from(new Set(cleaned))
 
+  const letterStyle = sanitizeLetterStyle(raw?.letterStyle)
+
   if (unique.length === 0) {
-    return { words: DEFAULT_WORDS }
+    return { words: DEFAULT_WORDS, letterStyle }
   }
 
-  return { words: unique }
+  return { words: unique, letterStyle }
 }
 
 function makeRound(settings, avoid = null) {

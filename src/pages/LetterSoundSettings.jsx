@@ -9,6 +9,7 @@ import {
   sanitizeLetterSoundSettings,
   saveLetterSoundSettings,
 } from '../exercises/LetterSound.jsx'
+import { LETTER_STYLE_OPTIONS, fontForStyle, formatStyleLabel, formatLetterCase } from '../utils/fontStyle.js'
 
 export default function LetterSoundSettings() {
   const [settings, setSettings] = useState(() => loadLetterSoundSettings())
@@ -61,6 +62,17 @@ export default function LetterSoundSettings() {
     })
   }
 
+  function updateLetterStyle(style) {
+    setSettings((previous) => {
+      const next = sanitizeLetterSoundSettings({
+        ...previous,
+        letterStyle: style,
+      })
+      saveLetterSoundSettings(next)
+      return next
+    })
+  }
+
   return (
     <div className="min-h-screen p-6 md:p-10 space-y-6">
       <header className="flex items-center justify-between">
@@ -76,6 +88,29 @@ export default function LetterSoundSettings() {
       <section className="space-y-6">
         <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 text-sm text-indigo-900">
           Choisis les lettres que tu veux faire apparaître dans l'exercice d'écoute. Les réglages sont sauvegardés automatiquement.
+        </div>
+
+        <div className="p-4 rounded-2xl border border-indigo-100 bg-white space-y-3">
+          <h2 className="text-lg font-semibold text-indigo-900">Style de lettres</h2>
+          <select
+            value={settings.letterStyle}
+            onChange={(event) => updateLetterStyle(event.target.value)}
+            className="w-full px-3 py-2 rounded-xl border bg-white shadow-sm"
+          >
+            {LETTER_STYLE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {formatStyleLabel(option)}
+              </option>
+            ))}
+          </select>
+          <div className="rounded-xl border border-dashed border-indigo-200 p-3 text-center">
+            <span
+              className="text-3xl font-semibold"
+              style={{ fontFamily: fontForStyle(settings.letterStyle) }}
+            >
+              {formatLetterCase('ABC', settings.letterStyle)}
+            </span>
+          </div>
         </div>
 
         <div className="p-4 rounded-2xl border border-indigo-100 bg-white space-y-3">
