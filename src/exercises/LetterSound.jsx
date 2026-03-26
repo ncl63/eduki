@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { shuffle, randomPickAvoiding } from '../utils/storage.js'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const SETTINGS_KEY = 'settings_letter_sound_v1'
@@ -84,7 +85,7 @@ export function saveLetterSoundSettings(settings) {
   }
 }
 
-function buildRound(settings) {
+function buildRound(settings, avoid = null) {
   const safeSettings = sanitizeLetterSoundSettings(settings)
   const enabled = safeSettings.enabledLetters.length > 0 ? safeSettings.enabledLetters : DEFAULT_ENABLED
 
@@ -93,18 +94,18 @@ function buildRound(settings) {
   }
 
   const optionsCount = Math.min(safeSettings.choicesPerRound, enabled.length)
-  const shuffledEnabled = shuffleArray(enabled)
+  const shuffledEnabled = shuffle(enabled)
   const optionsPool = shuffledEnabled.slice(0, optionsCount)
 
   if (optionsPool.length === 0) {
     return buildRound(DEFAULT_SOUND_SETTINGS)
   }
 
-  const target = optionsPool[Math.floor(Math.random() * optionsPool.length)]
+  const target = randomPickAvoiding(optionsPool, avoid ? [avoid] : [])
   const ensuredOptions = optionsPool.includes(target)
     ? optionsPool
     : [...optionsPool.slice(0, Math.max(optionsPool.length - 1, 0)), target]
-  const options = shuffleArray(ensuredOptions)
+  const options = shuffle(ensuredOptions)
 
   return {
     id: generateRoundId(),
@@ -120,14 +121,6 @@ function generateRoundId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function shuffleArray(input) {
-  const copy = [...input]
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 export default function LetterSound({ meta }) {
   const [settings] = useState(() => {
@@ -138,7 +131,12 @@ export default function LetterSound({ meta }) {
     return sanitizeLetterSoundSettings(filled)
   })
 
-  const [round, setRound] = useState(() => buildRound(settings))
+  const lastTargetRef = useRef(null)
+  const [round, setRound] = useState(() => {
+    const r = buildRound(settings)
+    lastTargetRef.current = r.target
+    return r
+  })
   const [choiceStates, setChoiceStates] = useState({})
   const [feedback, setFeedback] = useState(null)
   const [audioMessage, setAudioMessage] = useState('Clique sur 🔁 pour activer le son.')
@@ -339,7 +337,9 @@ export default function LetterSound({ meta }) {
   const advanceRound = useCallback(() => {
     setChoiceStates({})
     setFeedback(null)
-    setRound(buildRound(settings))
+    const r = buildRound(settings, lastTargetRef.current)
+    lastTargetRef.current = r.target
+    setRound(r)
   }, [settings])
 
   function handleChoice(letter) {

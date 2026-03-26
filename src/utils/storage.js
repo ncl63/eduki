@@ -82,3 +82,15 @@ export function randomPick(array) {
   }
   return array[Math.floor(Math.random() * array.length)]
 }
+
+/**
+ * Choisit un élément au hasard dans `array` en évitant les éléments de `recent`.
+ * Si tous les éléments sont dans `recent`, on ignore la contrainte et on pioche librement.
+ */
+export function randomPickAvoiding(array, recent = []) {
+  if (!array || array.length === 0) return undefined
+  const recentSet = new Set(recent)
+  const candidates = array.filter((item) => !recentSet.has(item))
+  const pool = candidates.length > 0 ? candidates : array
+  return pool[Math.floor(Math.random() * pool.length)]
+}
