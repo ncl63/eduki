@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace } from '../utils/storage.js'
+import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 
 const SETTINGS_KEY = 'settings_letters_v1'
 const STARS_KEY = 'cp_mvp_stars'
@@ -22,6 +23,7 @@ export default function LetterFind({ meta }) {
   const [feedback, setFeedback] = useState(null)
   const [stars, setStars] = useState(() => loadStars())
   const timeoutRef = useRef(null)
+  const { startRound, recordError, completeRound } = useExerciseTracking('letter-find')
 
   const remainingTargets = useMemo(
     () => cards.filter((card) => card.isTarget && card.state !== 'locked').length,
@@ -58,9 +60,15 @@ export default function LetterFind({ meta }) {
     setFeedback(null)
   }, [settings])
 
+  // Démarrer le suivi pour le premier tour
+  useEffect(() => {
+    startRound({ targetLetter: settings.targetLetter, totalCards: settings.itemsCount })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   function refreshRound() {
     setCards(makeScatterRound(settings))
     setFeedback(null)
+    startRound({ targetLetter: settings.targetLetter, totalCards: settings.itemsCount })
   }
 
   function handleCardClick(cardId) {
@@ -77,6 +85,7 @@ export default function LetterFind({ meta }) {
         if (card.isTarget) {
           return { ...card, state: 'locked', result: 'good' }
         }
+        recordError()
         return { ...card, result: 'bad' }
       })
 
@@ -92,6 +101,7 @@ export default function LetterFind({ meta }) {
       if (clicked.isTarget) {
         const allFound = next.every((card) => !card.isTarget || card.state === 'locked')
         if (allFound) {
+          completeRound()
           const newStars = Math.min(STAR_GOAL, stars + 1)
           setStars(newStars)
           saveStars(newStars)

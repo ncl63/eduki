@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadJSON, saveJSON, shuffle, randomPickAvoiding } from '../utils/storage.js'
+import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 
 // Default settings
 export const DEFAULT_SETTINGS = {
@@ -73,6 +74,7 @@ const ANIMATION_DURATIONS = {
 
 export default function NumberMatch({ meta }) {
   const navigate = useNavigate();
+  const { startRound, recordError, completeRound } = useExerciseTracking('number-match');
   const [settings, setSettings] = useState(loadNumberMatchSettings());
   const [currentTrial, setCurrentTrial] = useState(0);
   const [targetNumber, setTargetNumber] = useState(null);
@@ -117,6 +119,7 @@ export default function NumberMatch({ meta }) {
     setChoices(choicesArray);
     setFeedback(null);
     setSelectedChoice(null);
+    startRound({ targetNumber: target, choicesCount: choicesArray.length });
 
     // Announce target
     setTimeout(() => {
@@ -140,6 +143,7 @@ export default function NumberMatch({ meta }) {
     setFeedback(isCorrect ? 'correct' : 'incorrect');
 
     if (isCorrect) {
+      completeRound();
       setScore(prev => prev + 1);
       speak('Bravo !');
 
@@ -156,6 +160,7 @@ export default function NumberMatch({ meta }) {
         }
       }, duration + 1000);
     } else {
+      recordError();
       speak('Essaie encore !');
 
       // Clear feedback after a short time to allow retry

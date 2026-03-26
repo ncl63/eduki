@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadJSON, saveJSON, shuffle, randomPick, randomPickAvoiding } from '../utils/storage.js'
+import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 
 const SETTINGS_KEY = 'settings_words_v1'
 
@@ -46,7 +47,13 @@ export default function WordRecompose({ meta }) {
   })
   const [feedback, setFeedback] = useState(null)
   const timeoutsRef = useRef([])
+  const { startRound, recordError, completeRound } = useExerciseTracking('word-recompose')
   const sizes = useMemo(() => computeSizes(round.targetLetters.length), [round.targetLetters.length])
+
+  // Suivi du premier tour
+  useEffect(() => {
+    startRound({ targetWord: round.targetWord, letterCount: round.targetLetters.length })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -91,6 +98,7 @@ export default function WordRecompose({ meta }) {
     lastWordRef.current = r.targetWord
     setRound(r)
     setFeedback(null)
+    startRound({ targetWord: r.targetWord, letterCount: r.targetLetters.length })
   }
 
   function handleLetterClick(letterId) {
@@ -123,6 +131,7 @@ export default function WordRecompose({ meta }) {
         const completed = nextSlots.every((slot) => slot != null)
 
         if (completed) {
+          completeRound()
           setFeedback('Bravo !')
           scheduleTimeout(() => {
             refreshRound()
@@ -140,6 +149,7 @@ export default function WordRecompose({ meta }) {
 
       const nextPool = current.pool.slice()
       nextPool[letterIndex] = { ...nextPool[letterIndex], state: 'error' }
+      recordError()
       setFeedback("Essaie encore.")
 
       scheduleTimeout(() => {

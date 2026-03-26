@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shuffle, randomPickAvoiding } from '../utils/storage.js'
+import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const SETTINGS_KEY = 'settings_letter_sound_v1'
@@ -145,6 +146,15 @@ export default function LetterSound({ meta }) {
   const timeoutRef = useRef(null)
   const pendingPlayRef = useRef(null)
   const audioContextRef = useRef(null)
+
+  const { startRound, recordError, completeRound } = useExerciseTracking('letter-sound')
+
+  // Suivi du premier tour
+  useEffect(() => {
+    if (round) {
+      startRound({ targetLetter: round.target, choicesCount: settings.choicesPerRound })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const disabledLetters = useMemo(() => {
     const enabled = new Set(settings.enabledLetters)
@@ -340,7 +350,8 @@ export default function LetterSound({ meta }) {
     const r = buildRound(settings, lastTargetRef.current)
     lastTargetRef.current = r.target
     setRound(r)
-  }, [settings])
+    startRound({ targetLetter: r.target, choicesCount: settings.choicesPerRound })
+  }, [settings, startRound])
 
   function handleChoice(letter) {
     if (!round || choiceStates[round.target] === 'success') {
@@ -348,6 +359,7 @@ export default function LetterSound({ meta }) {
     }
 
     if (letter === round.target) {
+      completeRound()
       setChoiceStates((prev) => ({ ...prev, [letter]: 'success' }))
       setFeedback('Bravo !')
       if (timeoutRef.current) {
@@ -357,6 +369,7 @@ export default function LetterSound({ meta }) {
         advanceRound()
       }, 1200)
     } else {
+      recordError()
       setChoiceStates((prev) => ({ ...prev, [letter]: 'error' }))
       setFeedback('Essaie encore.')
     }
