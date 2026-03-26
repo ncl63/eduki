@@ -184,7 +184,7 @@ export default function WordRecompose({ meta }) {
             </Link>
           </div>
           <div className="flex justify-center min-w-0">
-            <div className="flex flex-nowrap justify-center overflow-x-auto min-w-0" style={{ gap: sizes.slot.gap }}>
+            <div className="flex flex-nowrap justify-center overflow-x-auto min-w-0">
               {round.targetLetters.map((char, index) => {
                 const filled = round.slots[index] != null
                 const nextSlotIndex = round.slots.findIndex((slot) => slot == null)
@@ -193,19 +193,20 @@ export default function WordRecompose({ meta }) {
                   <span
                     key={`${char}-${index}`}
                     className="flex flex-col items-center"
+                    style={{ width: '1em', fontSize: sizes.headerFont }}
                   >
                     <span
                       className={`font-bold leading-none text-center transition-colors ${
                         filled ? 'text-green-500' : 'text-indigo-900'
                       }`}
-                      style={{ fontSize: sizes.headerFont, lineHeight: 1.1 }}
+                      style={{ fontSize: 'inherit', lineHeight: 1.1 }}
                     >
                       {char}
                     </span>
                     <span
-                      className="select-none"
+                      className="select-none text-center"
                       style={{
-                        fontSize: `calc(${sizes.headerFont} * 0.5)`,
+                        fontSize: '0.35em',
                         lineHeight: 1,
                         visibility: isCurrent ? 'visible' : 'hidden',
                       }}
