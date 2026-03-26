@@ -219,9 +219,17 @@ export default function WordRecompose({ meta }) {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
             <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
-              {round.targetLetters.map((char, index) => (
-                <LetterSlot key={`${char}-${index}`} value={round.slots[index]} sizes={sizes} />
-              ))}
+              {round.targetLetters.map((char, index) => {
+                const nextSlotIndex = round.slots.findIndex((slot) => slot == null)
+                return (
+                  <LetterSlot
+                    key={`${char}-${index}`}
+                    value={round.slots[index]}
+                    sizes={sizes}
+                    isCurrent={index === nextSlotIndex}
+                  />
+                )
+              })}
             </div>
 
             {(() => {
@@ -262,21 +270,28 @@ export default function WordRecompose({ meta }) {
   )
 }
 
-function LetterSlot({ value, sizes }) {
+function LetterSlot({ value, sizes, isCurrent }) {
   const filled = value != null
   return (
-    <div
-      className={`rounded-2xl border-2 flex items-center justify-center font-semibold transition ${
-        filled ? 'bg-indigo-100 border-indigo-300 text-indigo-900' : 'bg-white border-indigo-200 text-indigo-300'
-      }`}
-      style={{
-        flex: '0 1 auto',
-        width: sizes.slot.width,
-        height: sizes.slot.height,
-        fontSize: sizes.slot.font,
-      }}
-    >
-      {filled ? value : ''}
+    <div className="flex flex-col items-center" style={{ flex: '0 1 auto', width: sizes.slot.width }}>
+      <div
+        className={`w-full rounded-2xl border-2 flex items-center justify-center font-semibold transition ${
+          filled ? 'bg-indigo-100 border-indigo-300 text-indigo-900' : 'bg-white border-indigo-200 text-indigo-300'
+        } ${isCurrent ? 'border-indigo-400 ring-2 ring-indigo-200' : ''}`}
+        style={{
+          height: sizes.slot.height,
+          fontSize: sizes.slot.font,
+        }}
+      >
+        {filled ? value : ''}
+      </div>
+      <div
+        className="text-center select-none transition-opacity"
+        style={{ fontSize: sizes.slot.font, opacity: isCurrent ? 1 : 0 }}
+        aria-hidden={!isCurrent}
+      >
+        👆🏻
+      </div>
     </div>
   )
 }
