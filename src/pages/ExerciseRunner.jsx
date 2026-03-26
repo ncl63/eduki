@@ -4,14 +4,12 @@ import { getExerciseById } from '../data/exercises.js'
 import LetterFind from '../exercises/LetterFind.jsx'
 import WordRecompose from '../exercises/WordRecompose.jsx'
 import LetterSound from '../exercises/LetterSound.jsx'
-import FeedRabbit from '../exercises/FeedRabbit.jsx'
 import NumberMatch from '../exercises/NumberMatch.jsx'
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,
   'letter-sound': LetterSound,
   'word-recompose': WordRecompose,
-  'feed-rabbit': FeedRabbit,
   'number-match': NumberMatch,
 }
 

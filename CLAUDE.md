@@ -47,12 +47,11 @@ src/
 ├── contexts/
 │   └── ThemeContext.jsx       # Dark mode (localStorage + prefers-color-scheme)
 ├── data/
-│   └── exercises.js           # Registre des 5 exercices (id, titre, niveau, description)
+│   └── exercises.js           # Registre des 4 exercices (id, titre, niveau, description)
 ├── exercises/                 # Composants autonomes — chacun gère ses propres settings
 │   ├── LetterFind.jsx         # Trouve la lettre (recherche visuelle)
 │   ├── LetterSound.jsx        # Écoute la lettre (audio m4a + Web Audio API)
 │   ├── WordRecompose.jsx      # Recompose le mot (séquencement de lettres)
-│   ├── FeedRabbit.jsx         # Nourrir le lapin (numération 1-3, Web Speech API)
 │   └── NumberMatch.jsx        # Correspondance de quantités (1-3)
 ├── pages/
 │   ├── Home.jsx               # Page d'accueil (bibliothèque d'exercices)
@@ -60,7 +59,6 @@ src/
 │   ├── LettersSettings.jsx    # Réglages de LetterFind
 │   ├── LetterSoundSettings.jsx
 │   ├── WordRecomposeSettings.jsx
-│   ├── FeedRabbitSettings.jsx
 │   └── NumberMatchSettings.jsx
 ├── utils/
 │   └── storage.js             # Utilitaires partagés (localStorage, clamp, shuffle, etc.)
