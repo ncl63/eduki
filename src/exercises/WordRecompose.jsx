@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadJSON, saveJSON, shuffle, randomPick } from '../utils/storage.js'
+import { loadJSON, saveJSON, shuffle, randomPick, randomPickAvoiding } from '../utils/storage.js'
 
 const SETTINGS_KEY = 'settings_words_v1'
 
@@ -38,7 +38,12 @@ function computeSizes(letterCount) {
 
 export default function WordRecompose({ meta }) {
   const [settings, setSettings] = useState(() => loadWordSettings())
-  const [round, setRound] = useState(() => makeRound(settings))
+  const lastWordRef = useRef(null)
+  const [round, setRound] = useState(() => {
+    const r = makeRound(settings)
+    lastWordRef.current = r.targetWord
+    return r
+  })
   const [feedback, setFeedback] = useState(null)
   const timeoutsRef = useRef([])
   const sizes = useMemo(() => computeSizes(round.targetLetters.length), [round.targetLetters.length])
@@ -82,7 +87,9 @@ export default function WordRecompose({ meta }) {
   function refreshRound() {
     const nextSettings = loadWordSettings()
     setSettings(nextSettings)
-    setRound(makeRound(nextSettings))
+    const r = makeRound(nextSettings, lastWordRef.current)
+    lastWordRef.current = r.targetWord
+    setRound(r)
     setFeedback(null)
   }
 
@@ -345,9 +352,9 @@ export function sanitizeWordSettings(raw) {
   return { words: unique }
 }
 
-function makeRound(settings) {
+function makeRound(settings, avoid = null) {
   const sanitized = sanitizeWordSettings(settings)
-  const word = pickRandomWord(sanitized.words)
+  const word = pickRandomWord(sanitized.words, avoid)
   const targetLetters = Array.from(word)
   const slots = targetLetters.map(() => null)
   const pool = shuffle(
@@ -366,11 +373,11 @@ function makeRound(settings) {
   }
 }
 
-function pickRandomWord(words) {
+function pickRandomWord(words, avoid = null) {
   if (!Array.isArray(words) || words.length === 0) {
     return DEFAULT_WORDS[0]
   }
-  return randomPick(words) ?? DEFAULT_WORDS[0]
+  return randomPickAvoiding(words, avoid ? [avoid] : []) ?? DEFAULT_WORDS[0]
 }
 
 function normalizeLetter(letter) {

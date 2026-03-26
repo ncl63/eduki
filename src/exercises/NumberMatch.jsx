@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loadJSON, saveJSON } from '../utils/storage.js'
+import { loadJSON, saveJSON, shuffle, randomPickAvoiding } from '../utils/storage.js'
 
 // Default settings
 export const DEFAULT_SETTINGS = {
@@ -81,6 +81,7 @@ export default function NumberMatch({ meta }) {
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [score, setScore] = useState(0);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const lastTargetRef = useRef(null);
 
   // Speech synthesis
   const speak = useCallback((text) => {
@@ -96,22 +97,23 @@ export default function NumberMatch({ meta }) {
   // Generate a new trial
   const generateTrial = useCallback(() => {
     const availableNumbers = settings.enabledNumbers;
-    const target = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+    const target = randomPickAvoiding(availableNumbers, [lastTargetRef.current]);
 
     // Generate choices ensuring target is included
     const choicesSet = new Set([target]);
-    const allNumbers = [1, 2, 3];
+    const allNumbers = settings.enabledNumbers;
 
     // Add 2 more distinct choices
-    while (choicesSet.size < 3) {
+    while (choicesSet.size < Math.min(3, allNumbers.length)) {
       const randomNum = allNumbers[Math.floor(Math.random() * allNumbers.length)];
       choicesSet.add(randomNum);
     }
 
     // Convert to array and shuffle
-    const choicesArray = Array.from(choicesSet).sort(() => Math.random() - 0.5);
+    const choicesArray = shuffle(Array.from(choicesSet));
 
     setTargetNumber(target);
+    lastTargetRef.current = target;
     setChoices(choicesArray);
     setFeedback(null);
     setSelectedChoice(null);
