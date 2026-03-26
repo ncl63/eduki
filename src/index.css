@@ -2,10 +2,10 @@
 
 @variant dark (.dark &);
 
-/* Police cursive scolaire Belle Allure (Grande Section) */
+/* Police cursive scolaire Belle Allure (Grande Section, trait épais) */
 @font-face {
   font-family: 'Belle Allure';
-  src: url('./fonts/BelleAllureGS.otf') format('opentype');
+  src: url('./fonts/BelleAllureGS-Gros.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
