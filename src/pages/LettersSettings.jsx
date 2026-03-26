@@ -2,13 +2,12 @@ import React, { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   DEFAULT_SETTINGS,
-  LETTER_STYLE_OPTIONS,
-  fontForStyle,
   loadLetterSettings,
   sanitizeSettings,
   saveLetterSettings,
   STAR_GOAL,
 } from '../exercises/LetterFind.jsx'
+import { LETTER_STYLE_OPTIONS, fontForStyle, formatStyleLabel, formatLetterCase } from '../utils/fontStyle.js'
 
 export default function LettersSettings() {
   const [settings, setSettings] = useState(() => loadLetterSettings())
@@ -130,7 +129,7 @@ export default function LettersSettings() {
                 className="text-3xl font-semibold"
                 style={{ fontFamily: fontForStyle(settings.letterStyle) }}
               >
-                ABC
+                {formatLetterCase('ABC', settings.letterStyle)}
               </span>
             </div>
           </div>
@@ -157,17 +156,4 @@ export default function LettersSettings() {
   )
 }
 
-function formatStyleLabel(value) {
-  switch (value) {
-    case 'cursif':
-      return 'Cursif'
-    case 'script':
-      return 'Script'
-    case 'serif':
-      return 'Serif'
-    case 'baton':
-    default:
-      return 'Bâton'
-  }
-}
 

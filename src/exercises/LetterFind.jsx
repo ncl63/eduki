@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace } from '../utils/storage.js'
 import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
+import { LETTER_STYLE_OPTIONS, DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
+
+export { LETTER_STYLE_OPTIONS, fontForStyle }
 
 const SETTINGS_KEY = 'settings_letters_v1'
 const STARS_KEY = 'cp_mvp_stars'
 export const STAR_GOAL = 10
-export const LETTER_STYLE_OPTIONS = ['baton', 'cursif', 'script', 'serif']
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 export const DEFAULT_SETTINGS = {
@@ -14,7 +16,7 @@ export const DEFAULT_SETTINGS = {
   distractorLetters: 'BCDGH',
   itemsCount: 12,
   targetRatio: 0.35,
-  letterStyle: 'baton',
+  letterStyle: DEFAULT_LETTER_STYLE,
 }
 
 export default function LetterFind({ meta }) {
@@ -152,7 +154,7 @@ export default function LetterFind({ meta }) {
                 fontFamily,
               }}
             >
-              {targetLetter}
+              {formatLetterCase(targetLetter, settings.letterStyle)}
             </span>
           </div>
           <div className="flex justify-end">
@@ -186,7 +188,8 @@ export default function LetterFind({ meta }) {
             <LetterCard
               key={card.id}
               card={card}
-              letterStyle={fontFamily}
+              fontFamily={fontFamily}
+              letterStyle={settings.letterStyle}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -199,7 +202,7 @@ export default function LetterFind({ meta }) {
   )
 }
 
-function LetterCard({ card, letterStyle, onClick }) {
+function LetterCard({ card, fontFamily, letterStyle, onClick }) {
   const { state, result, char } = card
   const locked = state === 'locked'
   let bg = 'bg-white'
@@ -229,12 +232,12 @@ function LetterCard({ card, letterStyle, onClick }) {
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
-        fontFamily: letterStyle,
+        fontFamily,
         minWidth: '6.5rem',
         minHeight: '6.5rem',
       }}
     >
-      {char}
+      {formatLetterCase(char, letterStyle)}
     </button>
   )
 }
@@ -264,9 +267,7 @@ function saveStars(value) {
 export function sanitizeSettings(raw) {
   const initial = { ...DEFAULT_SETTINGS, ...(raw || {}) }
   const targetLetter = pickLetter(initial.targetLetter) ?? DEFAULT_SETTINGS.targetLetter
-  const letterStyle = LETTER_STYLE_OPTIONS.includes(initial.letterStyle)
-    ? initial.letterStyle
-    : DEFAULT_SETTINGS.letterStyle
+  const letterStyle = sanitizeLetterStyle(initial.letterStyle)
 
   const itemsCount = clampInt(Number(initial.itemsCount) || DEFAULT_SETTINGS.itemsCount, 8, 30)
   const targetRatio = clampRatio(Number(initial.targetRatio) || DEFAULT_SETTINGS.targetRatio, 0.1, 0.9)
@@ -377,20 +378,6 @@ function placePointsNoOverlap(count, { minDistPercent, maxAttempts = 2500 }) {
   }
 
   return result
-}
-
-export function fontForStyle(style) {
-  switch (style) {
-    case 'cursif':
-      return '"Comic Sans MS", "Comic Neue", cursive'
-    case 'script':
-      return '"Pacifico", "Brush Script MT", cursive'
-    case 'serif':
-      return '"Georgia", "Times New Roman", serif'
-    case 'baton':
-    default:
-      return '"Segoe UI", "Inter", sans-serif'
-  }
 }
 
 function randFloat(min, max) {

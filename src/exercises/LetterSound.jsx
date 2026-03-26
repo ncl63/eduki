@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shuffle, randomPickAvoiding } from '../utils/storage.js'
 import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
+import { DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const SETTINGS_KEY = 'settings_letter_sound_v1'
@@ -36,6 +37,7 @@ const DEFAULT_ENABLED = AVAILABLE_LETTERS.length > 0 ? AVAILABLE_LETTERS : LETTE
 export const DEFAULT_SOUND_SETTINGS = {
   enabledLetters: [...DEFAULT_ENABLED],
   choicesPerRound: DEFAULT_CHOICES_PER_ROUND,
+  letterStyle: DEFAULT_LETTER_STYLE,
 }
 
 import { clamp } from '../utils/storage.js'
@@ -55,7 +57,8 @@ export function sanitizeLetterSoundSettings(settings) {
     : DEFAULT_CHOICES_PER_ROUND
   const boundedChoices = clamp(requestedChoices, MIN_CHOICES_PER_ROUND, MAX_CHOICES_PER_ROUND)
 
-  return { enabledLetters: unique, choicesPerRound: boundedChoices }
+  const letterStyle = sanitizeLetterStyle(settings?.letterStyle)
+  return { enabledLetters: unique, choicesPerRound: boundedChoices, letterStyle }
 }
 
 export function loadLetterSoundSettings() {
@@ -433,8 +436,9 @@ export default function LetterSound({ meta }) {
                 className={`rounded-3xl border-4 text-5xl sm:text-6xl font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(
                   choiceStates[letter],
                 )}`}
+                style={{ fontFamily: fontForStyle(settings.letterStyle) }}
               >
-                {letter}
+                {formatLetterCase(letter, settings.letterStyle)}
               </button>
             ))}
           </div>
