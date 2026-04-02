@@ -138,21 +138,21 @@ export default function LetterFind({ meta }) {
   const targetLetter = settings.targetLetter
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
-      <header className="w-full space-y-3">
+    <div className="h-screen px-4 py-3 md:px-8 md:py-4 flex flex-col gap-3 overflow-hidden">
+      <header className="w-full space-y-2 shrink-0">
         <div className="w-full grid grid-cols-3 items-center">
           <div>
             <Link to="/" className="text-sm text-gray-600 hover:underline">
               ⬅️ Accueil
             </Link>
           </div>
-          <div className="flex justify-center items-baseline gap-3">
+          <div className="flex justify-center items-baseline gap-3 overflow-hidden" style={{ maxHeight: 'clamp(60px, 14vw, 130px)' }}>
             {settings.letterStyle === 'mixte' ? (
               <>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(48px, 12vw, 140px)',
+                    fontSize: 'clamp(40px, 10vw, 110px)',
                     fontFamily: fontForStyle('baton'),
                   }}
                 >
@@ -160,14 +160,14 @@ export default function LetterFind({ meta }) {
                 </span>
                 <span
                   className="text-gray-300 leading-none"
-                  style={{ fontSize: 'clamp(20px, 5vw, 50px)' }}
+                  style={{ fontSize: 'clamp(16px, 4vw, 36px)' }}
                 >
                   /
                 </span>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(36px, 9vw, 100px)',
+                    fontSize: 'clamp(28px, 7vw, 80px)',
                     fontFamily: fontForStyle('script'),
                   }}
                 >
@@ -208,10 +208,9 @@ export default function LetterFind({ meta }) {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col gap-4 items-stretch overflow-hidden">
+      <main className="flex-1 flex flex-col gap-2 items-stretch overflow-hidden min-h-0">
         <div
-          className="relative flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner"
-          style={{ minHeight: 'calc(100vh - 220px)' }}
+          className="relative flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner min-h-0"
         >
           {cards.map((card) => (
             <LetterCard
@@ -237,6 +236,7 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
   // En mode mixte, chaque carte a son propre style
   const effectiveStyle = card.cardStyle || letterStyle
   const effectiveFont = card.cardStyle ? fontForStyle(card.cardStyle) : fontFamily
+  const isScript = effectiveStyle === 'script'
   let bg = 'bg-white'
   let border = 'border-indigo-200'
   let text = 'text-indigo-900'
@@ -258,15 +258,15 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       type="button"
       onClick={onClick}
       disabled={locked}
-      className={`absolute px-8 py-6 rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold text-5xl md:text-6xl leading-none -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 ${
+      className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold leading-none -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
         locked ? 'cursor-not-allowed' : 'hover:scale-110'
-      }`}
+      } ${isScript ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl'}`}
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
         fontFamily: effectiveFont,
-        minWidth: '6.5rem',
-        minHeight: '6.5rem',
+        width: '6.5rem',
+        height: '6.5rem',
       }}
     >
       {formatLetterCase(char, effectiveStyle)}
