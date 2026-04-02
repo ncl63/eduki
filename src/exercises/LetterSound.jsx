@@ -111,10 +111,18 @@ function buildRound(settings, avoid = null) {
     : [...optionsPool.slice(0, Math.max(optionsPool.length - 1, 0)), target]
   const options = shuffle(ensuredOptions)
 
+  // En mode mixte, alterner baton/script puis mélanger pour garantir les deux styles
+  let optionStyles = null
+  if (safeSettings.letterStyle === 'mixte') {
+    optionStyles = options.map((_, i) => (i % 2 === 0 ? 'baton' : 'script'))
+    optionStyles = shuffle(optionStyles)
+  }
+
   return {
     id: generateRoundId(),
     target,
     options,
+    optionStyles,
   }
 }
 
@@ -428,19 +436,26 @@ export default function LetterSound({ meta }) {
       <main className="flex-1 flex flex-col gap-4 items-stretch">
         <div className="flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 h-full">
-            {round.options.map((letter, index) => (
-              <button
-                key={`${round.id}-${index}`}
-                type="button"
-                onClick={() => handleChoice(letter)}
-                className={`rounded-3xl border-4 text-5xl sm:text-6xl font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(
-                  choiceStates[letter],
-                )}`}
-                style={{ fontFamily: fontForStyle(settings.letterStyle) }}
-              >
-                {formatLetterCase(letter, settings.letterStyle)}
-              </button>
-            ))}
+            {round.options.map((letter, index) => {
+              const cardStyle = round.optionStyles ? round.optionStyles[index] : settings.letterStyle
+              const isScript = cardStyle === 'script'
+              return (
+                <button
+                  key={`${round.id}-${index}`}
+                  type="button"
+                  onClick={() => handleChoice(letter)}
+                  className={`rounded-3xl border-4 font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${
+                    isScript ? 'text-4xl sm:text-5xl' : 'text-5xl sm:text-6xl'
+                  } ${getButtonClasses(choiceStates[letter])}`}
+                  style={{
+                    fontFamily: fontForStyle(cardStyle),
+                    lineHeight: isScript ? 1.6 : undefined,
+                  }}
+                >
+                  {formatLetterCase(letter, cardStyle)}
+                </button>
+              )
+            })}
           </div>
         </div>
         <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">{feedback}</div>
