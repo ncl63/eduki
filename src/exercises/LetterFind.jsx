@@ -146,13 +146,13 @@ export default function LetterFind({ meta }) {
               ⬅️ Accueil
             </Link>
           </div>
-          <div className="flex justify-center items-baseline gap-3 overflow-hidden" style={{ maxHeight: 'clamp(60px, 14vw, 130px)' }}>
+          <div className="flex justify-center items-baseline gap-3">
             {settings.letterStyle === 'mixte' ? (
               <>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(40px, 10vw, 110px)',
+                    fontSize: 'clamp(36px, 8vw, 90px)',
                     fontFamily: fontForStyle('baton'),
                   }}
                 >
@@ -160,14 +160,14 @@ export default function LetterFind({ meta }) {
                 </span>
                 <span
                   className="text-gray-300 leading-none"
-                  style={{ fontSize: 'clamp(16px, 4vw, 36px)' }}
+                  style={{ fontSize: 'clamp(14px, 3vw, 28px)' }}
                 >
                   /
                 </span>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(28px, 7vw, 80px)',
+                    fontSize: 'clamp(22px, 5vw, 56px)',
                     fontFamily: fontForStyle('script'),
                   }}
                 >
@@ -260,7 +260,7 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       disabled={locked}
       className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold leading-none -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
         locked ? 'cursor-not-allowed' : 'hover:scale-110'
-      } ${isScript ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl'}`}
+      } ${isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl'}`}
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
