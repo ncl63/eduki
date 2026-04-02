@@ -377,9 +377,9 @@ function makeScatterRound(inputSettings) {
     isTarget: entry.isTarget,
     state: 'idle',
     result: null,
+    cardStyle: cardStyles ? cardStyles[index] : null,
     x: points[index]?.x ?? randFloat(10, 90),
     y: points[index]?.y ?? randFloat(10, 90),
-    cardStyle: cardStyles ? cardStyles[index] : null,
   }))
 }
 
