@@ -111,18 +111,10 @@ function buildRound(settings, avoid = null) {
     : [...optionsPool.slice(0, Math.max(optionsPool.length - 1, 0)), target]
   const options = shuffle(ensuredOptions)
 
-  // En mode mixte, alterner baton/script puis mélanger pour garantir les deux styles
-  let optionStyles = null
-  if (safeSettings.letterStyle === 'mixte') {
-    optionStyles = options.map((_, i) => (i % 2 === 0 ? 'baton' : 'script'))
-    optionStyles = shuffle(optionStyles)
-  }
-
   return {
     id: generateRoundId(),
     target,
     options,
-    optionStyles,
   }
 }
 
@@ -437,22 +429,40 @@ export default function LetterSound({ meta }) {
         <div className="flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 h-full">
             {round.options.map((letter, index) => {
-              const cardStyle = round.optionStyles ? round.optionStyles[index] : settings.letterStyle
-              const isScript = cardStyle === 'script'
+              const isMixte = settings.letterStyle === 'mixte'
               return (
                 <button
                   key={`${round.id}-${index}`}
                   type="button"
                   onClick={() => handleChoice(letter)}
-                  className={`rounded-3xl border-4 font-black tracking-wide transition-all px-6 py-10 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${
-                    isScript ? 'text-4xl sm:text-5xl' : 'text-5xl sm:text-6xl'
-                  } ${getButtonClasses(choiceStates[letter])}`}
-                  style={{
-                    fontFamily: fontForStyle(cardStyle),
-                    lineHeight: isScript ? 1.6 : undefined,
-                  }}
+                  className={`rounded-3xl border-4 font-black tracking-wide transition-all px-6 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(choiceStates[letter])}`}
                 >
-                  {formatLetterCase(letter, cardStyle)}
+                  {isMixte ? (
+                    <span className="flex flex-col items-center gap-1">
+                      <span
+                        className="text-4xl sm:text-5xl"
+                        style={{ fontFamily: fontForStyle('baton') }}
+                      >
+                        {formatLetterCase(letter, 'baton')}
+                      </span>
+                      <span
+                        className="text-3xl sm:text-4xl"
+                        style={{ fontFamily: fontForStyle('script'), lineHeight: 1.6 }}
+                      >
+                        {formatLetterCase(letter, 'script')}
+                      </span>
+                    </span>
+                  ) : (
+                    <span
+                      className={`${settings.letterStyle === 'script' ? 'text-4xl sm:text-5xl' : 'text-5xl sm:text-6xl'}`}
+                      style={{
+                        fontFamily: fontForStyle(settings.letterStyle),
+                        lineHeight: settings.letterStyle === 'script' ? 1.6 : undefined,
+                      }}
+                    >
+                      {formatLetterCase(letter, settings.letterStyle)}
+                    </span>
+                  )}
                 </button>
               )
             })}

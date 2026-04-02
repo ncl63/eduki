@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace, shuffle } from '../utils/storage.js'
+import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace } from '../utils/storage.js'
 import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 import { LETTER_STYLE_OPTIONS, DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
@@ -233,10 +233,8 @@ export default function LetterFind({ meta }) {
 function LetterCard({ card, fontFamily, letterStyle, onClick }) {
   const { state, result, char } = card
   const locked = state === 'locked'
-  // En mode mixte, chaque carte a son propre style
-  const effectiveStyle = card.cardStyle || letterStyle
-  const effectiveFont = card.cardStyle ? fontForStyle(card.cardStyle) : fontFamily
-  const isScript = effectiveStyle === 'script'
+  const isMixte = letterStyle === 'mixte'
+  const isScript = letterStyle === 'script'
   let bg = 'bg-white'
   let border = 'border-indigo-200'
   let text = 'text-indigo-900'
@@ -260,17 +258,40 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       disabled={locked}
       className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
         locked ? 'cursor-not-allowed' : 'hover:scale-110'
-      } ${isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl leading-none'}`}
+      }`}
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
-        fontFamily: effectiveFont,
-        width: '6.5rem',
-        height: '6.5rem',
-        lineHeight: isScript ? 1.6 : undefined,
+        width: isMixte ? '7rem' : '6.5rem',
+        height: isMixte ? '7rem' : '6.5rem',
       }}
     >
-      {formatLetterCase(char, effectiveStyle)}
+      {isMixte ? (
+        <span className="flex flex-col items-center leading-none">
+          <span
+            className="text-3xl md:text-4xl"
+            style={{ fontFamily: fontForStyle('baton') }}
+          >
+            {formatLetterCase(char, 'baton')}
+          </span>
+          <span
+            className="text-xl md:text-2xl"
+            style={{ fontFamily: fontForStyle('script'), lineHeight: 1.6 }}
+          >
+            {formatLetterCase(char, 'script')}
+          </span>
+        </span>
+      ) : (
+        <span
+          className={isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl leading-none'}
+          style={{
+            fontFamily,
+            lineHeight: isScript ? 1.6 : undefined,
+          }}
+        >
+          {formatLetterCase(char, letterStyle)}
+        </span>
+      )}
     </button>
   )
 }
@@ -364,13 +385,6 @@ function makeScatterRound(inputSettings) {
 
   shuffleInPlace(letters)
 
-  // En mode mixte, alterner baton/script puis mélanger pour garantir les deux styles
-  let cardStyles = null
-  if (settings.letterStyle === 'mixte') {
-    cardStyles = letters.map((_, i) => (i % 2 === 0 ? 'baton' : 'script'))
-    cardStyles = shuffle(cardStyles)
-  }
-
   return letters.map((entry, index) => ({
     id: `${entry.char}-${index}-${Math.random().toString(36).slice(2, 6)}`,
     char: entry.char,
@@ -379,7 +393,6 @@ function makeScatterRound(inputSettings) {
     result: null,
     x: points[index]?.x ?? randFloat(10, 90),
     y: points[index]?.y ?? randFloat(10, 90),
-    cardStyle: cardStyles ? cardStyles[index] : null,
   }))
 }
 
