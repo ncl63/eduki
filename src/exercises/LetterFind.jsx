@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace } from '../utils/storage.js'
+import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace, shuffle } from '../utils/storage.js'
 import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 import { LETTER_STYLE_OPTIONS, DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
@@ -146,16 +146,45 @@ export default function LetterFind({ meta }) {
               ⬅️ Accueil
             </Link>
           </div>
-          <div className="flex justify-center">
-            <span
-              className="font-bold text-indigo-900 leading-none"
-              style={{
-                fontSize: 'clamp(48px, 12vw, 140px)',
-                fontFamily,
-              }}
-            >
-              {formatLetterCase(targetLetter, settings.letterStyle)}
-            </span>
+          <div className="flex justify-center items-center gap-3">
+            {settings.letterStyle === 'mixte' ? (
+              <>
+                <span
+                  className="font-bold text-indigo-900 leading-none"
+                  style={{
+                    fontSize: 'clamp(40px, 10vw, 120px)',
+                    fontFamily: fontForStyle('baton'),
+                  }}
+                >
+                  {formatLetterCase(targetLetter, 'baton')}
+                </span>
+                <span
+                  className="text-gray-300 leading-none"
+                  style={{ fontSize: 'clamp(24px, 6vw, 60px)' }}
+                >
+                  /
+                </span>
+                <span
+                  className="font-bold text-indigo-900 leading-none"
+                  style={{
+                    fontSize: 'clamp(40px, 10vw, 120px)',
+                    fontFamily: fontForStyle('script'),
+                  }}
+                >
+                  {formatLetterCase(targetLetter, 'script')}
+                </span>
+              </>
+            ) : (
+              <span
+                className="font-bold text-indigo-900 leading-none"
+                style={{
+                  fontSize: 'clamp(48px, 12vw, 140px)',
+                  fontFamily,
+                }}
+              >
+                {formatLetterCase(targetLetter, settings.letterStyle)}
+              </span>
+            )}
           </div>
           <div className="flex justify-end">
             <Link to="/settings/letters" className="text-sm text-gray-600 hover:underline">
@@ -205,6 +234,9 @@ export default function LetterFind({ meta }) {
 function LetterCard({ card, fontFamily, letterStyle, onClick }) {
   const { state, result, char } = card
   const locked = state === 'locked'
+  // En mode mixte, chaque carte a son propre style
+  const effectiveStyle = card.cardStyle || letterStyle
+  const effectiveFont = card.cardStyle ? fontForStyle(card.cardStyle) : fontFamily
   let bg = 'bg-white'
   let border = 'border-indigo-200'
   let text = 'text-indigo-900'
@@ -232,12 +264,12 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
-        fontFamily,
+        fontFamily: effectiveFont,
         minWidth: '6.5rem',
         minHeight: '6.5rem',
       }}
     >
-      {formatLetterCase(char, letterStyle)}
+      {formatLetterCase(char, effectiveStyle)}
     </button>
   )
 }
@@ -331,6 +363,13 @@ function makeScatterRound(inputSettings) {
 
   shuffleInPlace(letters)
 
+  // En mode mixte, alterner baton/script puis mélanger pour garantir les deux styles
+  let cardStyles = null
+  if (settings.letterStyle === 'mixte') {
+    cardStyles = letters.map((_, i) => (i % 2 === 0 ? 'baton' : 'script'))
+    cardStyles = shuffle(cardStyles)
+  }
+
   return letters.map((entry, index) => ({
     id: `${entry.char}-${index}-${Math.random().toString(36).slice(2, 6)}`,
     char: entry.char,
@@ -339,6 +378,7 @@ function makeScatterRound(inputSettings) {
     result: null,
     x: points[index]?.x ?? randFloat(10, 90),
     y: points[index]?.y ?? randFloat(10, 90),
+    cardStyle: cardStyles ? cardStyles[index] : null,
   }))
 }
 

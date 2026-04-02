@@ -125,12 +125,24 @@ export default function LettersSettings() {
               ))}
             </select>
             <div className="rounded-xl border border-dashed border-indigo-200 p-3 text-center">
-              <span
-                className="text-3xl font-semibold"
-                style={{ fontFamily: fontForStyle(settings.letterStyle) }}
-              >
-                {formatLetterCase('ABC', settings.letterStyle)}
-              </span>
+              {settings.letterStyle === 'mixte' ? (
+                <span className="text-3xl font-semibold flex items-center justify-center gap-3">
+                  <span style={{ fontFamily: fontForStyle('baton') }}>
+                    {formatLetterCase('ABC', 'baton')}
+                  </span>
+                  <span className="text-gray-400 text-xl">/</span>
+                  <span style={{ fontFamily: fontForStyle('script') }}>
+                    {formatLetterCase('ABC', 'script')}
+                  </span>
+                </span>
+              ) : (
+                <span
+                  className="text-3xl font-semibold"
+                  style={{ fontFamily: fontForStyle(settings.letterStyle) }}
+                >
+                  {formatLetterCase('ABC', settings.letterStyle)}
+                </span>
+              )}
             </div>
           </div>
 
