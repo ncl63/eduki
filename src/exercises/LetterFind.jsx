@@ -267,6 +267,7 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
         fontFamily: effectiveFont,
         width: '6.5rem',
         height: '6.5rem',
+        paddingTop: isScript ? '0.4rem' : undefined,
       }}
     >
       {formatLetterCase(char, effectiveStyle)}
