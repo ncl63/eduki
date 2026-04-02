@@ -258,16 +258,16 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       type="button"
       onClick={onClick}
       disabled={locked}
-      className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold leading-none -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
+      className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
         locked ? 'cursor-not-allowed' : 'hover:scale-110'
-      } ${isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl'}`}
+      } ${isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl leading-none'}`}
       style={{
         left: `${card.x}%`,
         top: `${card.y}%`,
         fontFamily: effectiveFont,
         width: '6.5rem',
         height: '6.5rem',
-        paddingTop: isScript ? '0.4rem' : undefined,
+        lineHeight: isScript ? 1.6 : undefined,
       }}
     >
       {formatLetterCase(char, effectiveStyle)}
