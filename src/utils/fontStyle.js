@@ -1,7 +1,7 @@
 // Utilitaires partagés pour la sélection de police dans les exercices de lettres.
 // Deux modes : "baton" (majuscules sans-serif) et "script" (minuscules cursives Belle Allure).
 
-export const LETTER_STYLE_OPTIONS = ['baton', 'script']
+export const LETTER_STYLE_OPTIONS = ['baton', 'script', 'mixte']
 export const DEFAULT_LETTER_STYLE = 'baton'
 
 /**
@@ -35,6 +35,8 @@ export function formatStyleLabel(style) {
   switch (style) {
     case 'script':
       return 'Script minuscule'
+    case 'mixte':
+      return 'Mixte'
     case 'baton':
     default:
       return 'Bâton'
