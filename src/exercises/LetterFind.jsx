@@ -146,13 +146,13 @@ export default function LetterFind({ meta }) {
               ⬅️ Accueil
             </Link>
           </div>
-          <div className="flex justify-center items-center gap-3">
+          <div className="flex justify-center items-baseline gap-3">
             {settings.letterStyle === 'mixte' ? (
               <>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(40px, 10vw, 120px)',
+                    fontSize: 'clamp(48px, 12vw, 140px)',
                     fontFamily: fontForStyle('baton'),
                   }}
                 >
@@ -160,14 +160,14 @@ export default function LetterFind({ meta }) {
                 </span>
                 <span
                   className="text-gray-300 leading-none"
-                  style={{ fontSize: 'clamp(24px, 6vw, 60px)' }}
+                  style={{ fontSize: 'clamp(20px, 5vw, 50px)' }}
                 >
                   /
                 </span>
                 <span
                   className="font-bold text-indigo-900 leading-none"
                   style={{
-                    fontSize: 'clamp(40px, 10vw, 120px)',
+                    fontSize: 'clamp(36px, 9vw, 100px)',
                     fontFamily: fontForStyle('script'),
                   }}
                 >
