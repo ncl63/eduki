@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx'
 import ExerciseRunner from './pages/ExerciseRunner.jsx'
 import LettersSettings from './pages/LettersSettings.jsx'
 import LetterSoundSettings from './pages/LetterSoundSettings.jsx'
+import QuantitySoundSettings from './pages/QuantitySoundSettings.jsx'
 import WordRecomposeSettings from './pages/WordRecomposeSettings.jsx'
 import Suivi from './pages/Suivi.jsx'
 
@@ -21,6 +22,7 @@ export default function App() {
               <Route path="/ex/:exerciseId" element={<ExerciseRunner />} />
               <Route path="/settings/letters" element={<LettersSettings />} />
               <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
+              <Route path="/settings/quantity-sound" element={<QuantitySoundSettings />} />
               <Route path="/settings/words" element={<WordRecomposeSettings />} />
               <Route path="/suivi" element={<Suivi />} />
             </Routes>

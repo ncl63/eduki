@@ -14,6 +14,13 @@ export const EXERCISES = [
     settingsPath: '/settings/letter-sound',
   },
   {
+    id: 'quantity-sound',
+    titre: 'Écoute le nombre',
+    niveau: 'GS',
+    description: 'Écoute un nombre de 1 à 6 et retrouve la quantité correspondante.',
+    settingsPath: '/settings/quantity-sound',
+  },
+  {
     id: 'word-recompose',
     titre: 'Recompose le mot',
     niveau: 'CP',

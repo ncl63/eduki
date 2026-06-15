@@ -9,6 +9,7 @@ import { EXERCISES } from '../data/exercises.js'
 const EXERCISE_ICONS = {
   'letter-find': '🔍',
   'letter-sound': '🔊',
+  'quantity-sound': '🎲',
   'word-recompose': '🧩',
 }
 

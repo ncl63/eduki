@@ -4,10 +4,12 @@ import { getExerciseById } from '../data/exercises.js'
 import LetterFind from '../exercises/LetterFind.jsx'
 import WordRecompose from '../exercises/WordRecompose.jsx'
 import LetterSound from '../exercises/LetterSound.jsx'
+import QuantitySound from '../exercises/QuantitySound.jsx'
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,
   'letter-sound': LetterSound,
+  'quantity-sound': QuantitySound,
   'word-recompose': WordRecompose,
 }
 
