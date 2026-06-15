@@ -10,7 +10,6 @@ const EXERCISE_ICONS = {
   'letter-find': '🔍',
   'letter-sound': '🔊',
   'word-recompose': '🧩',
-  'number-match': '🔢',
 }
 
 export default function Suivi() {

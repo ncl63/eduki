@@ -52,14 +52,12 @@ src/
 │   ├── LetterFind.jsx         # Trouve la lettre (recherche visuelle)
 │   ├── LetterSound.jsx        # Écoute la lettre (audio m4a + Web Audio API)
 │   ├── WordRecompose.jsx      # Recompose le mot (séquencement de lettres)
-│   └── NumberMatch.jsx        # Correspondance de quantités (1-3)
 ├── pages/
 │   ├── Home.jsx               # Page d'accueil (bibliothèque d'exercices)
 │   ├── ExerciseRunner.jsx     # Routeur dynamique vers le bon exercice
 │   ├── LettersSettings.jsx    # Réglages de LetterFind
 │   ├── LetterSoundSettings.jsx
 │   ├── WordRecomposeSettings.jsx
-│   └── NumberMatchSettings.jsx
 ├── utils/
 │   └── storage.js             # Utilitaires partagés (localStorage, clamp, shuffle, etc.)
 └── Lettersound/               # 26 fichiers audio A-Z (.m4a)

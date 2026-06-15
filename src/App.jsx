@@ -8,7 +8,6 @@ import ExerciseRunner from './pages/ExerciseRunner.jsx'
 import LettersSettings from './pages/LettersSettings.jsx'
 import LetterSoundSettings from './pages/LetterSoundSettings.jsx'
 import WordRecomposeSettings from './pages/WordRecomposeSettings.jsx'
-import NumberMatchSettings from './pages/NumberMatchSettings.jsx'
 import Suivi from './pages/Suivi.jsx'
 
 export default function App() {
@@ -23,7 +22,6 @@ export default function App() {
               <Route path="/settings/letters" element={<LettersSettings />} />
               <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
               <Route path="/settings/words" element={<WordRecomposeSettings />} />
-              <Route path="/settings/number-match" element={<NumberMatchSettings />} />
               <Route path="/suivi" element={<Suivi />} />
             </Routes>
           </ErrorBoundary>

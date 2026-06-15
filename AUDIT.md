@@ -10,7 +10,7 @@
 
 | Dossier | Contenu |
 |---|---|
-| `src/exercises/` | 4 exercices (LetterFind, LetterSound, WordRecompose, NumberMatch) |
+| `src/exercises/` | 3 exercices (LetterFind, LetterSound, WordRecompose) |
 | `src/pages/` | Home, ExerciseRunner, 4 pages de réglages |
 | `src/components/` | EnTete, CarteExercice, BarreRecherche, FiltreNiveau |
 | `src/contexts/` | ThemeContext (dark mode) |

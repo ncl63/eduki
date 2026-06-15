@@ -20,13 +20,6 @@ export const EXERCISES = [
     description: "Recompose le mot affiché en sélectionnant les lettres dans l'ordre.",
     settingsPath: '/settings/words',
   },
-  {
-    id: 'number-match',
-    titre: 'Correspondance de quantités',
-    niveau: 'Maternelle',
-    description: 'Trouve la quantité qui correspond au modèle (1-3).',
-    settingsPath: '/settings/number-match',
-  },
 ]
 
 export function getExerciseById(id) {
