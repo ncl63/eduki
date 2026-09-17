@@ -65,8 +65,9 @@ function SettingsContent({ set }) {
             type="range"
             min="2"
             max={Math.min(4, settings.activeItemIds.length)}
+            step="1"
             value={settings.choicesPerRound}
-            onChange={(event) => save({ ...settings, choicesPerRound: Number(event.target.value) })}
+            onInput={(event) => save({ ...settings, choicesPerRound: Number(event.currentTarget.value) })}
             className="w-full"
           />
           <p className="text-sm ui-muted">Commence par 2 choix, puis augmente progressivement la difficulté.</p>
