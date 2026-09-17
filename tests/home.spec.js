@@ -103,3 +103,18 @@ test('petits écrans et tablette sans contenu tronqué', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Comment ça marche' })).toBeVisible()
   }
 })
+
+test('Grafokwest et catégorie Désignation vide', async ({ page }, testInfo) => {
+  await page.goto('./')
+  await expect(page).toHaveTitle('Grafokwest — Apprendre, simplement')
+  await expect(page.getByRole('link', { name: 'Grafokwest, accueil' })).toBeVisible()
+  await page.getByRole('button', { name: 'Désignation', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Désignation', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.exercise-card')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Aucun exercice pour le moment' })).toBeVisible()
+  await expect(page.getByRole('status')).toHaveText('0 exercice affiché')
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.screenshot({ path: testInfo.outputPath('designation.png'), fullPage: true })
+  await page.getByRole('button', { name: 'Tout voir' }).click()
+  await expect(page.locator('.exercise-card')).toHaveCount(4)
+})

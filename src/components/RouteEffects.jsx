@@ -11,7 +11,7 @@ export default function RouteEffects() {
     const title = exercise
       ? `${pathname.startsWith('/settings/') ? 'Réglages — ' : ''}${exercise.titre}`
       : pathname === '/' ? 'Apprendre, simplement' : 'Page introuvable'
-    document.title = `Eduki — ${title}`
+    document.title = `Grafokwest — ${title}`
   }, [pathname])
   return null
 }
