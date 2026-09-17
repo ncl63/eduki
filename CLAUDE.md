@@ -48,11 +48,13 @@ src/
 ├── contexts/
 │   └── ThemeContext.jsx       # Dark mode (localStorage + prefers-color-scheme)
 ├── data/
-│   └── exercises.js           # Registre des 4 exercices (id, titre, niveau, description)
+│   ├── exercises.js           # Registre des exercices (id, titre, niveau, description)
+│   └── designationSets.js     # Lots de contenus réutilisables du moteur de désignation
 ├── exercises/                 # Composants autonomes — chacun gère ses propres settings
 │   ├── LetterFind.jsx         # Trouve la lettre (recherche visuelle)
 │   ├── LetterSound.jsx        # Écoute la lettre (audio m4a + Web Audio API)
 │   ├── WordRecompose.jsx      # Recompose le mot (séquencement de lettres)
+│   ├── Designation.jsx        # Moteur générique image + consigne sonore
 ├── pages/
 │   ├── Home.jsx               # Page d'accueil (bibliothèque d'exercices)
 │   ├── ExerciseRunner.jsx     # Routeur dynamique vers le bon exercice

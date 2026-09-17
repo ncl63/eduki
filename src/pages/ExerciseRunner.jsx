@@ -1,16 +1,19 @@
 import React, { lazy } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getExerciseById } from '../data/exercises.js'
+import { getDesignationSet } from '../data/designationSets.js'
 const LetterFind = lazy(() => import('../exercises/LetterFind.jsx'))
 const WordRecompose = lazy(() => import('../exercises/WordRecompose.jsx'))
 const LetterSound = lazy(() => import('../exercises/LetterSound.jsx'))
 const QuantitySound = lazy(() => import('../exercises/QuantitySound.jsx'))
+const Designation = lazy(() => import('../exercises/Designation.jsx'))
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,
   'letter-sound': LetterSound,
   'quantity-sound': QuantitySound,
   'word-recompose': WordRecompose,
+  'designation-shapes': Designation,
 }
 
 export default function ExerciseRunner() {
@@ -26,6 +29,14 @@ export default function ExerciseRunner() {
         <Link to="/" className="underline underline-offset-4">← Retour à l'accueil</Link>
       </div>
     )
+  }
+
+  if (meta.designationSetId) {
+    const set = getDesignationSet(meta.designationSetId)
+    if (!set) {
+      return <div className="shell-state"><h1>Lot de désignation introuvable</h1><Link to="/">Retour aux exercices</Link></div>
+    }
+    return <Component meta={meta} set={set} />
   }
 
   return <Component meta={meta} />

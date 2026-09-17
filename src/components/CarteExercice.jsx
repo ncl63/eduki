@@ -5,6 +5,7 @@ function Preview({ id }) {
   if (id === 'letter-find') return <div className="letters"><span>b</span><b>a</b><span>d</span></div>
   if (id === 'letter-sound') return <div className="sounds"><Icon name="sound" /><span>a</span><i>ıııııı</i></div>
   if (id === 'word-recompose') return <div className="word">{'chat'.split('').map(letter => <span key={letter}>{letter}</span>)}</div>
+  if (id === 'designation-shapes') return <div className="shape-preview"><i className="preview-circle" /><i className="preview-triangle" /><i className="preview-square" /></div>
   return <div className="numbers"><span>3</span><div><i /><i /><i /></div></div>
 }
 export default function CarteExercice({ exercise }) {

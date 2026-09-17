@@ -25,16 +25,16 @@ export default function Home() {
         <p className="sr-only" role="status">{exercises.length} exercice{exercises.length > 1 ? 's' : ''} affiché{exercises.length > 1 ? 's' : ''}</p>
         <div className="exercise-grid">{exercises.length > 0
           ? exercises.map(exercise => <CarteExercice key={exercise.id} exercise={exercise} />)
-          : <div className="empty-category"><Icon name="book" /><h2>Aucun exercice pour le moment</h2><p>Les exercices de désignation seront ajoutés ici prochainement.</p></div>}
+          : <div className="empty-category"><Icon name="book" /><h2>Aucun exercice pour le moment</h2><p>De nouveaux exercices seront ajoutés prochainement.</p></div>}
         </div>
       </section>
       <aside className="guide-strip"><div className="guide-icon"><Icon name="sliders" /></div><div><h2>Un exercice qui s’adapte à vous.</h2><p>Lettres, difficulté, affichage… ajustez les réglages avant de commencer.</p></div><button type="button" onClick={() => help.current.showModal()}>Comment ça marche <Icon name="arrow" /></button></aside>
     </main>
-    <footer className="home-footer"><span className="footer-brand">Grafokwest<span>.</span></span><p>Apprendre, un exercice à la fois.</p><span>Lettres, mots & nombres</span></footer>
+    <footer className="home-footer"><span className="footer-brand">Grafokwest<span>.</span></span><p>Apprendre, un exercice à la fois.</p><span>Lettres, mots, nombres & désignation</span></footer>
     <dialog className="help-dialog" ref={help} aria-labelledby="help-title" onClick={event => { if (event.target === help.current) help.current.close() }}>
       <div className="dialog-heading"><span className="eyebrow">PRENDRE LE TEMPS D’APPRENDRE</span><button className="icon-button" type="button" aria-label="Fermer le mode d’emploi" onClick={() => help.current.close()}><Icon name="close" /></button></div>
       <h2 id="help-title">Tout commence par un exercice.</h2>
-      <ol><li><strong>Choisissez ce que vous souhaitez travailler.</strong><p>Les lettres, les sons, les mots ou les nombres : chaque exercice a un objectif précis.</p></li><li><strong>Ajustez les réglages.</strong><p>Le lien « Réglages » de chaque carte permet d’adapter le contenu et l’affichage.</p></li><li><strong>Commencez à votre rythme.</strong><p>Aucun compte à créer. Pour les activités d’écoute, activez le son de votre appareil.</p></li></ol>
+      <ol><li><strong>Choisissez ce que vous souhaitez travailler.</strong><p>Les lettres, les sons, les mots, les nombres ou la désignation : chaque exercice a un objectif précis.</p></li><li><strong>Ajustez les réglages.</strong><p>Le lien « Réglages » de chaque carte permet d’adapter le contenu et l’affichage.</p></li><li><strong>Commencez à votre rythme.</strong><p>Aucun compte à créer. Pour les activités d’écoute, activez le son de votre appareil.</p></li></ol>
       <button className="primary-action" type="button" onClick={() => help.current.close()}>C’est parti <Icon name="arrow" /></button>
     </dialog>
   </div>

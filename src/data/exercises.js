@@ -39,6 +39,17 @@ export const EXERCISES = [
     description: "Remettez les lettres dans le bon ordre.",
     settingsPath: '/settings/words',
   },
+  {
+    id: 'designation-shapes',
+    titre: 'Montre la forme',
+    niveau: 'MS',
+    category: "Désignation",
+    skill: "Écoute & désignation",
+    tone: "peach",
+    description: "Écoutez une consigne et désignez la bonne forme.",
+    settingsPath: '/settings/designation/simple-shapes',
+    designationSetId: 'simple-shapes',
+  },
 ]
 
 export function getExerciseById(id) {

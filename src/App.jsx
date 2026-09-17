@@ -9,6 +9,7 @@ const LettersSettings = lazy(() => import('./pages/LettersSettings.jsx'))
 const LetterSoundSettings = lazy(() => import('./pages/LetterSoundSettings.jsx'))
 const QuantitySoundSettings = lazy(() => import('./pages/QuantitySoundSettings.jsx'))
 const WordRecomposeSettings = lazy(() => import('./pages/WordRecomposeSettings.jsx'))
+const DesignationSettings = lazy(() => import('./pages/DesignationSettings.jsx'))
 export default function App() {
   return <ThemeProvider><HashRouter><RouteEffects /><ErrorBoundary><Suspense fallback={<main className="shell-state" role="status">Chargement de l’exercice…</main>}><Routes>
     <Route path="/" element={<Home />} />
@@ -17,6 +18,7 @@ export default function App() {
     <Route path="/settings/letter-sound" element={<LetterSoundSettings />} />
     <Route path="/settings/quantity-sound" element={<QuantitySoundSettings />} />
     <Route path="/settings/words" element={<WordRecomposeSettings />} />
+    <Route path="/settings/designation/:setId" element={<DesignationSettings />} />
     <Route path="*" element={<main className="shell-state"><h1>Cette page n’existe pas.</h1><Link to="/">Retour aux exercices</Link></main>} />
   </Routes></Suspense></ErrorBoundary></HashRouter></ThemeProvider>
 }

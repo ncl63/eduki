@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-const settingsRoutes = ['letters', 'letter-sound', 'quantity-sound', 'words']
+const settingsRoutes = ['letters', 'letter-sound', 'quantity-sound', 'words', 'designation/simple-shapes']
 test('réglages lisibles en clair et en sombre', async ({ page }, testInfo) => {
   for (const theme of ['light', 'dark']) {
     await page.addInitScript(value => localStorage.setItem('theme', value), theme)
@@ -72,6 +72,21 @@ test('mots : contenu personnalisé et réponse complète', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
+test('désignation : difficulté, contenus actifs et réponse', async ({ page }) => {
+  await page.addInitScript(() => { Math.random = () => 0.01 })
+  await page.goto('./#/settings/designation/simple-shapes')
+  await expect(page.getByRole('slider', { name: /Nombre de choix/ })).toHaveValue('2')
+  await page.getByRole('slider', { name: /Nombre de choix/ }).fill('3')
+  await page.getByRole('button', { name: 'Rectangle', exact: true }).click()
+  await page.reload()
+  await expect(page.getByRole('slider', { name: /Nombre de choix/ })).toHaveValue('3')
+  await expect(page.getByRole('button', { name: 'Rectangle', exact: true })).toHaveAttribute('aria-pressed', 'false')
+  await page.getByRole('link', { name: /Retour au jeu/ }).click()
+  await expect(page.locator('main button')).toHaveCount(3)
+  await page.getByRole('button', { name: 'Cercle', exact: true }).click()
+  await expect(page.getByText('Bravo !', { exact: true })).toBeVisible()
+})
+
 test('retours erreur et réussite toujours distincts', async ({ page }, testInfo) => {
   await page.addInitScript(() => { Math.random = () => 0.01; localStorage.setItem('theme', 'dark') })
   await page.goto('./#/ex/quantity-sound')
@@ -87,7 +102,7 @@ test('retours erreur et réussite toujours distincts', async ({ page }, testInfo
 test('exercices : contraste, commandes et polices conservées', async ({ page }, testInfo) => {
   for (const theme of ['light', 'dark']) {
     await page.addInitScript(value => localStorage.setItem('theme', value), theme)
-    for (const route of ['letter-find', 'letter-sound', 'quantity-sound', 'word-recompose']) {
+    for (const route of ['letter-find', 'letter-sound', 'quantity-sound', 'word-recompose', 'designation-shapes']) {
       await page.goto('./#/ex/' + route)
       await expect(page.locator('.activity-page')).toBeVisible()
       await expect(page.getByRole('link', { name: /Accueil/ })).toBeVisible()

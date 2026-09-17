@@ -6,7 +6,7 @@ test('accueil, filtres et navigation sans profils', async ({ page }) => {
   page.on('pageerror', error => errors.push(error.message))
   await page.goto('./')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Les exercices')
-  await expect(page.locator('.exercise-card')).toHaveCount(4)
+  await expect(page.locator('.exercise-card')).toHaveCount(5)
   await expect(page.getByText(/profil/i)).toHaveCount(0)
   await page.getByRole('button', { name: 'Lettres', exact: true }).click()
   await expect(page.locator('.exercise-card')).toHaveCount(2)
@@ -16,7 +16,7 @@ test('accueil, filtres et navigation sans profils', async ({ page }) => {
   await page.getByRole('button', { name: 'Nombres', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Écoute le nombre' })).toBeVisible()
   await page.getByRole('button', { name: 'Tout voir' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(4)
+  await expect(page.locator('.exercise-card')).toHaveCount(5)
   await expect(page.locator('.exercise-card').first()).toBeInViewport()
   expect(errors).toEqual([])
 })
@@ -49,6 +49,7 @@ const routes = [
   ['letter-sound', 'letter-sound'],
   ['quantity-sound', 'quantity-sound'],
   ['word-recompose', 'words'],
+  ['designation-shapes', 'designation/simple-shapes'],
 ]
 for (const [exercise, settings] of routes) {
   test('exercice et réglages : ' + exercise, async ({ page }) => {
@@ -75,13 +76,13 @@ test('stockage indisponible et page inconnue', async ({ page }) => {
     Storage.prototype.setItem = () => { throw new DOMException('Unavailable', 'SecurityError') }
   })
   await page.goto('./')
-  await expect(page.locator('.exercise-card')).toHaveCount(4)
+  await expect(page.locator('.exercise-card')).toHaveCount(5)
   await page.getByRole('button', { name: 'Activer le thème sombre' }).click()
   await expect(page.locator('html')).toHaveClass('dark')
   await page.goto('./#/inconnue')
   await expect(page.getByRole('heading', { name: 'Cette page n’existe pas.' })).toBeVisible()
   await page.getByRole('link', { name: 'Retour aux exercices' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(4)
+  await expect(page.locator('.exercise-card')).toHaveCount(5)
 })
 
 test('navigation clavier depuis le lien d’évitement', async ({ page }) => {
@@ -104,17 +105,17 @@ test('petits écrans et tablette sans contenu tronqué', async ({ page }) => {
   }
 })
 
-test('Grafokwest et catégorie Désignation vide', async ({ page }, testInfo) => {
+test('Grafokwest et premier exercice de désignation', async ({ page }, testInfo) => {
   await page.goto('./')
   await expect(page).toHaveTitle('Grafokwest — Apprendre, simplement')
   await expect(page.getByRole('link', { name: 'Grafokwest, accueil' })).toBeVisible()
   await page.getByRole('button', { name: 'Désignation', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Désignation', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.locator('.exercise-card')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: 'Aucun exercice pour le moment' })).toBeVisible()
-  await expect(page.getByRole('status')).toHaveText('0 exercice affiché')
+  await expect(page.locator('.exercise-card')).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'Montre la forme' })).toBeVisible()
+  await expect(page.getByRole('status')).toHaveText('1 exercice affiché')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.screenshot({ path: testInfo.outputPath('designation.png'), fullPage: true })
   await page.getByRole('button', { name: 'Tout voir' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(4)
+  await expect(page.locator('.exercise-card')).toHaveCount(5)
 })
