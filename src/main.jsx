@@ -5,3 +5,7 @@ import './index.css'
 
 const root = createRoot(document.getElementById('root'))
 root.render(<App />)
+
+import './styles/shell.css'
+
+import './styles/activities.css'

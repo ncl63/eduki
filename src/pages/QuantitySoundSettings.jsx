@@ -37,26 +37,26 @@ export default function QuantitySoundSettings() {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-10 space-y-6 bg-white dark:bg-gray-900">
+    <div className="settings-page min-h-screen p-6 md:p-10 space-y-6 ui-surface">
       <header className="flex flex-wrap items-center justify-between gap-3 sm:grid sm:grid-cols-3">
-        <Link to="/" className="text-sm text-gray-600 hover:underline dark:text-gray-300">
+        <Link to="/" className="text-sm ui-muted hover:underline">
           Accueil
         </Link>
-        <h1 className="order-first w-full text-2xl font-bold text-center text-gray-900 dark:text-white sm:order-none sm:w-auto">
+        <h1 className="order-first w-full text-2xl font-bold text-center ui-ink sm:order-none sm:w-auto">
           Réglages – Écoute le nombre
         </h1>
-        <Link to="/ex/quantity-sound" className="text-sm text-right text-gray-600 hover:underline dark:text-gray-300">
+        <Link to="/ex/quantity-sound" className="text-sm text-right ui-muted hover:underline">
           Retour au jeu
         </Link>
       </header>
 
       <section className="space-y-6">
-        <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 text-sm text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-100">
+        <div className="p-4 rounded-2xl border ui-border ui-note text-sm ui-ink">
           La voix prononce toujours un nombre de 1 à 6. Choisis la manière dont les réponses seront affichées.
         </div>
 
         <fieldset className="space-y-3">
-          <legend className="mb-3 text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+          <legend className="mb-3 text-lg font-semibold ui-ink">
             Affichage des réponses
           </legend>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -71,21 +71,21 @@ export default function QuantitySoundSettings() {
                   onClick={() => updateDisplayMode(option.value)}
                   className={`rounded-3xl border-4 p-5 text-left transition focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-indigo-300 ${
                     selected
-                      ? 'border-indigo-600 bg-indigo-50 shadow-lg dark:bg-indigo-950'
-                      : 'border-gray-200 bg-white hover:border-indigo-300 dark:border-gray-700 dark:bg-gray-800'
+                      ? 'ui-primary-border ui-selected-soft ui-shadow'
+                      : 'ui-border ui-surface hover:border-indigo-300'
                   }`}
                 >
-                  <span className="flex min-h-32 items-center justify-center text-indigo-900 dark:text-indigo-100">
+                  <span className="flex min-h-32 items-center justify-center ui-ink">
                     {option.value === 'dice' ? (
                       <DiceFace quantity={5} className="w-24" />
                     ) : (
                       <span className="text-8xl font-black">5</span>
                     )}
                   </span>
-                  <span className="mt-4 block text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+                  <span className="mt-4 block text-lg font-semibold ui-ink">
                     {option.title}
                   </span>
-                  <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
+                  <span className="mt-1 block text-sm ui-muted">
                     {option.description}
                   </span>
                 </button>
@@ -98,7 +98,7 @@ export default function QuantitySoundSettings() {
           <button
             type="button"
             onClick={resetDefaults}
-            className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            className="px-4 py-2 rounded-xl border ui-border-strong ui-surface text-sm hover:bg-gray-50"
           >
             Réinitialiser
           </button>

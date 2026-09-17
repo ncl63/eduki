@@ -1,0 +1,100 @@
+/* Présentation commune : aucune règle de grille, taille ou placement pédagogique. */
+.activity-page,
+.settings-page {
+  --activity-accent: #345bc6;
+  --activity-accent-hover: #294aa7;
+  --activity-border: #dfe5eb;
+  --activity-border-strong: #bdc9d8;
+  --activity-tint: #eef2fb;
+  --activity-success-bg: #e9f4ec;
+  --activity-success-ink: #21613a;
+  --activity-success-border: #77aa86;
+  --activity-error-bg: #fff0ee;
+  --activity-error-ink: #ab342b;
+  --activity-error-border: #dc8a82;
+  background: var(--paper);
+  color: var(--ink);
+}
+.dark .activity-page,
+.dark .settings-page {
+  --activity-accent: #a7baff;
+  --activity-accent-hover: #c6d2ff;
+  --activity-border: #34404e;
+  --activity-border-strong: #61738a;
+  --activity-tint: #273449;
+  --activity-success-bg: #183d2c;
+  --activity-success-ink: #b1e7c1;
+  --activity-success-border: #6ca784;
+  --activity-error-bg: #472a2d;
+  --activity-error-ink: #ffc3bc;
+  --activity-error-border: #cc8680;
+}
+.ui-ink { color: var(--ink); }
+.ui-muted { color: var(--muted); }
+.ui-accent { color: var(--activity-accent); }
+.ui-placeholder { color: var(--activity-border-strong); }
+.ui-surface,
+.ui-panel { background: var(--surface); }
+.ui-border { border-color: var(--activity-border); }
+.ui-border-strong { border-color: var(--activity-border-strong); }
+.ui-selected-soft,
+.ui-note { background: var(--activity-tint); }
+.ui-note { color: var(--ink); }
+.ui-selection-border,
+.ui-primary-border { border-color: var(--activity-accent); }
+.ui-primary,
+.ui-progress { background: #345bc6; }
+.ui-primary { color: #fff; }
+.ui-primary:hover { background: #294aa7; }
+.ui-shadow { box-shadow: 0 3px 10px rgb(30 49 73 / 6%); }
+.ui-panel { box-shadow: 0 1px 3px rgb(30 49 73 / 3%); }
+.ui-success-surface { background: var(--activity-success-bg); }
+.ui-success-border { border-color: var(--activity-success-border); }
+.ui-success-ink { color: var(--activity-success-ink); }
+.ui-error-surface { background: var(--activity-error-bg); }
+.ui-error-border { border-color: var(--activity-error-border); }
+.ui-error-ink { color: var(--activity-error-ink); }
+
+:is(.activity-page, .settings-page) :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--activity-accent);
+  outline-offset: 4px;
+}
+:is(.activity-page, .settings-page) button { cursor: pointer; }
+:is(.activity-page, .settings-page) button:disabled { cursor: default; }
+:is(.activity-page, .settings-page) header a {
+  color: var(--activity-accent);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 5px;
+  transition: text-decoration-color 150ms;
+}
+:is(.activity-page, .settings-page) header a:hover { text-decoration-color: currentColor; }
+.activity-page main button:not(:disabled):hover { border-color: var(--activity-accent); }
+.activity-page main button.ui-error-surface:hover { border-color: var(--activity-error-border); }
+.activity-page main button.ui-success-surface:hover { border-color: var(--activity-success-border); }
+.activity-page header button[aria-label] { box-shadow: 0 4px 12px rgb(52 91 198 / 14%); }
+.settings-page :is(h1, h2, legend) { color: var(--ink); }
+.settings-page :is(input:not([type=range]), select, textarea) {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--activity-border-strong);
+  box-shadow: 0 1px 2px rgb(30 49 73 / 3%);
+}
+.settings-page input[type=range] { accent-color: #345bc6; }
+.dark .settings-page input[type=range] { accent-color: #a7baff; }
+.settings-page :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
+.settings-page button { border-color: var(--activity-border-strong); }
+.settings-page button[aria-pressed=true] { border-color: #345bc6; }
+.settings-page button[aria-checked=true] { border-color: var(--activity-accent); }
+.settings-page button:not([aria-pressed=true]):not([aria-checked=true]):hover {
+  background: var(--activity-tint);
+  border-color: var(--activity-accent);
+}
+.settings-page button[aria-pressed=true]:hover { background: #294aa7; }
+.settings-page :is(select, textarea, input) { border-radius: 10px; }
+.activity-page .text-amber-600 { color: #956000; }
+.dark .activity-page .text-amber-600,
+.dark .activity-page .text-amber-700 { color: #f5d197; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.activity-page, .settings-page) header a { transition: none; }
+}

@@ -31,25 +31,25 @@ export default function LettersSettings() {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-10 space-y-6">
+    <div className="settings-page min-h-screen p-6 md:p-10 space-y-6">
       <header className="flex items-center justify-between">
-        <Link to="/" className="text-sm text-gray-600 hover:underline">
+        <Link to="/" className="text-sm ui-muted hover:underline">
           ⬅️ Accueil
         </Link>
         <h1 className="text-2xl font-bold">Réglages – Trouve la lettre</h1>
-        <Link to="/ex/letter-find" className="text-sm text-gray-600 hover:underline">
+        <Link to="/ex/letter-find" className="text-sm ui-muted hover:underline">
           Retour au jeu →
         </Link>
       </header>
 
       <section className="space-y-4">
-        <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 text-sm text-indigo-900">
+        <div className="p-4 rounded-2xl border ui-border ui-note text-sm ui-ink">
           Ajuste les paramètres du jeu. Les modifications sont sauvegardées automatiquement et une nouvelle manche se lance dès ton retour sur le jeu.
         </div>
 
         <form className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700" htmlFor="targetLetter">
+            <label className="font-semibold text-sm ui-muted" htmlFor="targetLetter">
               Lettre cible
             </label>
             <input
@@ -57,28 +57,28 @@ export default function LettersSettings() {
               value={settings.targetLetter}
               onChange={(event) => update({ targetLetter: event.target.value })}
               maxLength={1}
-              className="w-24 px-3 py-2 rounded-xl border bg-white shadow-sm text-center text-2xl"
+              className="w-24 px-3 py-2 rounded-xl border ui-surface ui-shadow text-center text-2xl"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700" htmlFor="distractorLetters">
+            <label className="font-semibold text-sm ui-muted" htmlFor="distractorLetters">
               Lettres distractrices
             </label>
             <input
               id="distractorLetters"
               value={settings.distractorLetters}
               onChange={(event) => update({ distractorLetters: event.target.value })}
-              className="w-full px-3 py-2 rounded-xl border bg-white shadow-sm uppercase tracking-wide"
+              className="w-full px-3 py-2 rounded-xl border ui-surface ui-shadow uppercase tracking-wide"
               placeholder="Ex. BCEFGH"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs ui-muted">
               MAJUSCULES, séparées ou non, la lettre cible est automatiquement exclue.
             </p>
           </div>
 
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700" htmlFor="itemsCount">
+            <label className="font-semibold text-sm ui-muted" htmlFor="itemsCount">
               Nombre de cartes ({settings.itemsCount})
             </label>
             <input
@@ -89,11 +89,11 @@ export default function LettersSettings() {
               value={settings.itemsCount}
               onChange={(event) => update({ itemsCount: Number(event.target.value) })}
             />
-            <p className="text-xs text-gray-500">Entre 8 et 30 cartes.</p>
+            <p className="text-xs ui-muted">Entre 8 et 30 cartes.</p>
           </div>
 
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700" htmlFor="targetRatio">
+            <label className="font-semibold text-sm ui-muted" htmlFor="targetRatio">
               Ratio de lettres cibles ({targetCount} / {settings.itemsCount})
             </label>
             <input
@@ -105,18 +105,18 @@ export default function LettersSettings() {
               value={settings.targetRatio}
               onChange={(event) => update({ targetRatio: Number(event.target.value) })}
             />
-            <p className="text-xs text-gray-500">Entre 10% et 90% des cartes.</p>
+            <p className="text-xs ui-muted">Entre 10% et 90% des cartes.</p>
           </div>
 
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700" htmlFor="letterStyle">
+            <label className="font-semibold text-sm ui-muted" htmlFor="letterStyle">
               Style de lettres
             </label>
             <select
               id="letterStyle"
               value={settings.letterStyle}
               onChange={(event) => update({ letterStyle: event.target.value })}
-              className="w-full px-3 py-2 rounded-xl border bg-white shadow-sm"
+              className="w-full px-3 py-2 rounded-xl border ui-surface ui-shadow"
             >
               {LETTER_STYLE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -124,13 +124,13 @@ export default function LettersSettings() {
                 </option>
               ))}
             </select>
-            <div className="rounded-xl border border-dashed border-indigo-200 p-3 text-center">
+            <div className="rounded-xl border border-dashed ui-border-strong p-3 text-center">
               {settings.letterStyle === 'mixte' ? (
                 <span className="text-3xl font-semibold flex items-center justify-center gap-3">
                   <span style={{ fontFamily: fontForStyle('baton') }}>
                     {formatLetterCase('ABC', 'baton')}
                   </span>
-                  <span className="text-gray-400 text-xl">/</span>
+                  <span className="ui-muted text-xl">/</span>
                   <span style={{ fontFamily: fontForStyle('script') }}>
                     {formatLetterCase('ABC', 'script')}
                   </span>
@@ -147,8 +147,8 @@ export default function LettersSettings() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-semibold text-sm text-gray-700">Progression étoiles</label>
-            <div className="rounded-xl border border-indigo-100 p-3 bg-white shadow-sm text-sm text-gray-600">
+            <label className="font-semibold text-sm ui-muted">Progression étoiles</label>
+            <div className="rounded-xl border ui-border p-3 ui-surface ui-shadow text-sm ui-muted">
               Tu gagnes 1 ⭐ par victoire, jusqu'à {STAR_GOAL}. Les réglages sont partagés avec l'exercice.
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function LettersSettings() {
           <button
             type="button"
             onClick={resetDefaults}
-            className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm hover:bg-gray-50"
+            className="px-4 py-2 rounded-xl border ui-border-strong ui-surface text-sm hover:bg-gray-50"
           >
             Réinitialiser
           </button>

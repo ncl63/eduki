@@ -74,28 +74,29 @@ export default function LetterSoundSettings() {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-10 space-y-6">
+    <div className="settings-page min-h-screen p-6 md:p-10 space-y-6">
       <header className="flex items-center justify-between">
-        <Link to="/" className="text-sm text-gray-600 hover:underline">
+        <Link to="/" className="text-sm ui-muted hover:underline">
           ⬅️ Accueil
         </Link>
         <h1 className="text-2xl font-bold">Réglages – Écoute la lettre</h1>
-        <Link to="/ex/letter-sound" className="text-sm text-gray-600 hover:underline">
+        <Link to="/ex/letter-sound" className="text-sm ui-muted hover:underline">
           Retour au jeu →
         </Link>
       </header>
 
       <section className="space-y-6">
-        <div className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/60 text-sm text-indigo-900">
+        <div className="p-4 rounded-2xl border ui-border ui-note text-sm ui-ink">
           Choisis les lettres que tu veux faire apparaître dans l'exercice d'écoute. Les réglages sont sauvegardés automatiquement.
         </div>
 
-        <div className="p-4 rounded-2xl border border-indigo-100 bg-white space-y-3">
-          <h2 className="text-lg font-semibold text-indigo-900">Style de lettres</h2>
+        <div className="p-4 rounded-2xl border ui-border ui-surface space-y-3">
+          <h2 id="sound-style-label" className="text-lg font-semibold ui-ink">Style de lettres</h2>
           <select
+            aria-labelledby="sound-style-label"
             value={settings.letterStyle}
             onChange={(event) => updateLetterStyle(event.target.value)}
-            className="w-full px-3 py-2 rounded-xl border bg-white shadow-sm"
+            className="w-full px-3 py-2 rounded-xl border ui-surface ui-shadow"
           >
             {LETTER_STYLE_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -103,13 +104,13 @@ export default function LetterSoundSettings() {
               </option>
             ))}
           </select>
-          <div className="rounded-xl border border-dashed border-indigo-200 p-3 text-center">
+          <div className="rounded-xl border border-dashed ui-border-strong p-3 text-center">
             {settings.letterStyle === 'mixte' ? (
               <span className="text-3xl font-semibold flex items-center justify-center gap-3">
                 <span style={{ fontFamily: fontForStyle('baton') }}>
                   {formatLetterCase('ABC', 'baton')}
                 </span>
-                <span className="text-gray-400 text-xl">/</span>
+                <span className="ui-muted text-xl">/</span>
                 <span style={{ fontFamily: fontForStyle('script') }}>
                   {formatLetterCase('ABC', 'script')}
                 </span>
@@ -125,27 +126,28 @@ export default function LetterSoundSettings() {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-indigo-100 bg-white space-y-3">
-          <h2 className="text-lg font-semibold text-indigo-900">Nombre de lettres proposées</h2>
-          <p className="text-sm text-gray-600">
+        <div className="p-4 rounded-2xl border ui-border ui-surface space-y-3">
+          <h2 id="sound-count-label" className="text-lg font-semibold ui-ink">Nombre de lettres proposées</h2>
+          <p className="text-sm ui-muted">
             {settings.choicesPerRound} lettre{settings.choicesPerRound > 1 ? 's' : ''} apparaîtront à chaque question.
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500">{MIN_CHOICES_PER_ROUND}</span>
+            <span className="text-xs ui-muted">{MIN_CHOICES_PER_ROUND}</span>
             <input
               type="range"
+              aria-labelledby="sound-count-label"
               min={MIN_CHOICES_PER_ROUND}
               max={MAX_CHOICES_PER_ROUND}
               value={settings.choicesPerRound}
               onChange={(event) => updateChoices(Number(event.target.value))}
               className="flex-1 accent-indigo-600"
             />
-            <span className="text-xs text-gray-500">{MAX_CHOICES_PER_ROUND}</span>
+            <span className="text-xs ui-muted">{MAX_CHOICES_PER_ROUND}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 text-sm text-gray-600 items-center">
-          <span className="font-semibold text-indigo-900 text-lg">{enabledCount}</span>
+        <div className="flex flex-wrap gap-3 text-sm ui-muted items-center">
+          <span className="font-semibold ui-ink text-lg">{enabledCount}</span>
           lettres actives
           <button type="button" onClick={selectAll} className="px-3 py-1 rounded-full border text-xs">
             Tout sélectionner
@@ -163,10 +165,11 @@ export default function LetterSoundSettings() {
                 key={letter}
                 type="button"
                 onClick={() => toggleLetter(letter)}
+                aria-pressed={enabled}
                 className={`rounded-2xl border-2 py-3 text-xl font-semibold transition ${
                   enabled
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg'
-                    : 'bg-white text-indigo-700 border-indigo-100'
+                    ? 'ui-primary text-white ui-primary-border ui-shadow'
+                    : 'ui-surface ui-accent ui-border'
                 }`}
               >
                 {letter}
@@ -179,7 +182,7 @@ export default function LetterSoundSettings() {
           <button
             type="button"
             onClick={resetDefaults}
-            className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm hover:bg-gray-50"
+            className="px-4 py-2 rounded-xl border ui-border-strong ui-surface text-sm hover:bg-gray-50"
           >
             Réinitialiser
           </button>

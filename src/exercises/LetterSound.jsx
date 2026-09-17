@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shuffle, randomPickAvoiding } from '../utils/storage.js'
-import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 import { DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -150,14 +149,7 @@ export default function LetterSound({ meta }) {
   const pendingPlayRef = useRef(null)
   const audioContextRef = useRef(null)
 
-  const { startRound, recordError, completeRound } = useExerciseTracking('letter-sound')
 
-  // Suivi du premier tour
-  useEffect(() => {
-    if (round) {
-      startRound({ targetLetter: round.target, choicesCount: settings.choicesPerRound })
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const disabledLetters = useMemo(() => {
     const enabled = new Set(settings.enabledLetters)
@@ -239,7 +231,7 @@ export default function LetterSound({ meta }) {
             if (AudioContext) {
               audioContextRef.current = new AudioContext()
             }
-          } catch (err) {
+          } catch {
             // AudioContext initialization failed
           }
         }
@@ -353,8 +345,7 @@ export default function LetterSound({ meta }) {
     const r = buildRound(settings, lastTargetRef.current)
     lastTargetRef.current = r.target
     setRound(r)
-    startRound({ targetLetter: r.target, choicesCount: settings.choicesPerRound })
-  }, [settings, startRound])
+  }, [settings])
 
   function handleChoice(letter) {
     if (!round || choiceStates[round.target] === 'success') {
@@ -362,7 +353,6 @@ export default function LetterSound({ meta }) {
     }
 
     if (letter === round.target) {
-      completeRound()
       setChoiceStates((prev) => ({ ...prev, [letter]: 'success' }))
       setFeedback('Bravo !')
       if (timeoutRef.current) {
@@ -372,7 +362,6 @@ export default function LetterSound({ meta }) {
         advanceRound()
       }, 1200)
     } else {
-      recordError()
       setChoiceStates((prev) => ({ ...prev, [letter]: 'error' }))
       setFeedback('Essaie encore.')
     }
@@ -391,20 +380,20 @@ export default function LetterSound({ meta }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
+    <div className="activity-page min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
       <header className="w-full space-y-3">
         <div className="w-full grid grid-cols-3 items-center">
           <div>
-            <Link to="/" className="text-sm text-gray-600 hover:underline">
+            <Link to="/" className="text-sm ui-muted hover:underline">
               ⬅️ Accueil
             </Link>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Écoute & choisis</p>
-            <h1 className="text-2xl font-bold text-indigo-900 text-center">{meta?.titre ?? 'Écoute la lettre'}</h1>
+            <p className="text-xs uppercase tracking-wide ui-muted">Écoute & choisis</p>
+            <h1 className="text-2xl font-bold ui-ink text-center">{meta?.titre ?? 'Écoute la lettre'}</h1>
           </div>
           <div className="flex justify-end">
-            <Link to="/settings/letter-sound" className="text-sm text-gray-600 hover:underline">
+            <Link to="/settings/letter-sound" className="text-sm ui-muted hover:underline">
               Réglages ⚙️
             </Link>
           </div>
@@ -414,11 +403,11 @@ export default function LetterSound({ meta }) {
             type="button"
             onClick={replaySound}
             aria-label="Réécouter la lettre"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-indigo-600 text-white text-3xl shadow hover:bg-indigo-500 flex items-center justify-center"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full ui-primary text-white text-3xl ui-shadow hover:bg-indigo-500 flex items-center justify-center"
           >
             🔁
           </button>
-          <div className="text-sm text-gray-600 text-center">
+          <div className="text-sm ui-muted text-center">
             <p>Clique sur la lettre que tu entends.</p>
             {audioMessage && <p className="text-xs text-amber-600 mt-1">{audioMessage}</p>}
           </div>
@@ -426,7 +415,7 @@ export default function LetterSound({ meta }) {
       </header>
 
       <main className="flex-1 flex flex-col gap-4 items-stretch">
-        <div className="flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6">
+        <div className="flex-1 w-full ui-panel rounded-3xl border ui-border ui-shadow p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 h-full">
             {round.options.map((letter, index) => {
               const isMixte = settings.letterStyle === 'mixte'
@@ -435,7 +424,7 @@ export default function LetterSound({ meta }) {
                   key={`${round.id}-${index}`}
                   type="button"
                   onClick={() => handleChoice(letter)}
-                  className={`rounded-3xl border-4 font-black tracking-wide transition-all px-6 min-h-[140px] sm:min-h-[200px] flex items-center justify-center shadow ${getButtonClasses(choiceStates[letter])}`}
+                  className={`rounded-3xl border-4 font-black tracking-wide transition-all px-6 min-h-[140px] sm:min-h-[200px] flex items-center justify-center ui-shadow ${getButtonClasses(choiceStates[letter])}`}
                 >
                   {isMixte ? (
                     <span className="flex flex-col items-center gap-1">
@@ -468,11 +457,11 @@ export default function LetterSound({ meta }) {
             })}
           </div>
         </div>
-        <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">{feedback}</div>
+        <div className="text-base md:text-lg ui-muted text-center min-h-[1.5rem]">{feedback}</div>
       </main>
 
       {disabledLetters.length > 0 && (
-        <footer className="text-center text-xs text-gray-400">
+        <footer className="text-center text-xs ui-muted">
           Lettres exclues : {disabledLetters.join(', ')}
         </footer>
       )}
@@ -483,10 +472,10 @@ export default function LetterSound({ meta }) {
 function getButtonClasses(state) {
   switch (state) {
     case 'success':
-      return 'bg-green-100 border-green-400 text-green-700 shadow-lg'
+      return 'ui-success-surface ui-success-border ui-success-ink ui-shadow'
     case 'error':
-      return 'bg-red-100 border-red-400 text-red-600 shadow-lg'
+      return 'ui-error-surface ui-error-border ui-error-ink ui-shadow'
     default:
-      return 'bg-white border-indigo-200 text-indigo-900 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-xl'
+      return 'ui-surface ui-border-strong ui-ink hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-xl'
   }
 }

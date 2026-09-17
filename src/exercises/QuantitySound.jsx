@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 import { loadJSON, randomPickAvoiding, saveJSON, shuffle } from '../utils/storage.js'
 
 export const QUANTITIES = [1, 2, 3, 4, 5, 6]
@@ -66,7 +65,7 @@ export function DiceFace({ quantity, className = '' }) {
   return (
     <span
       aria-hidden="true"
-      className={`grid aspect-square w-24 grid-cols-3 grid-rows-3 gap-2 rounded-3xl border-4 border-current bg-white p-3 shadow-sm sm:w-28 sm:gap-3 sm:p-4 dark:bg-gray-900 ${className}`}
+      className={`grid aspect-square w-24 grid-cols-3 grid-rows-3 gap-2 rounded-3xl border-4 border-current ui-surface p-3 ui-shadow sm:w-28 sm:gap-3 sm:p-4 ${className}`}
     >
       {Array.from({ length: 9 }, (_, index) => {
         const position = index + 1
@@ -95,11 +94,7 @@ export default function QuantitySound({ meta }) {
   const [isSpeechUnlocked, setIsSpeechUnlocked] = useState(false)
   const [speechMessage, setSpeechMessage] = useState('Clique sur le bouton écouter pour entendre le nombre.')
 
-  const { startRound, recordError, completeRound } = useExerciseTracking('quantity-sound')
 
-  useEffect(() => {
-    startRound({ targetNumber: round.target, displayMode: settings.displayMode })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const speakNumber = useCallback((number) => {
     if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
@@ -145,8 +140,7 @@ export default function QuantitySound({ meta }) {
     const nextRound = buildRound(lastTargetRef.current)
     lastTargetRef.current = nextRound.target
     setRound(nextRound)
-    startRound({ targetNumber: nextRound.target, displayMode: settings.displayMode })
-  }, [settings.displayMode, startRound])
+  }, [])
 
   function handleChoice(quantity) {
     if (choiceStates[round.target] === 'success') {
@@ -154,7 +148,6 @@ export default function QuantitySound({ meta }) {
     }
 
     if (quantity === round.target) {
-      completeRound()
       setChoiceStates((previous) => ({ ...previous, [quantity]: 'success' }))
       setFeedback('Bravo !')
       if (timeoutRef.current) {
@@ -162,7 +155,6 @@ export default function QuantitySound({ meta }) {
       }
       timeoutRef.current = setTimeout(advanceRound, 1200)
     } else {
-      recordError()
       setChoiceStates((previous) => ({ ...previous, [quantity]: 'error' }))
       setFeedback('Essaie encore.')
     }
@@ -181,22 +173,22 @@ export default function QuantitySound({ meta }) {
     : 'Clique sur le chiffre que tu entends.'
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6 bg-indigo-50/40 dark:bg-gray-900">
+    <div className="activity-page min-h-screen px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6">
       <header className="w-full space-y-4">
         <div className="w-full grid grid-cols-3 items-center">
           <div>
-            <Link to="/" className="text-sm text-gray-600 hover:underline dark:text-gray-300">
+            <Link to="/" className="text-sm ui-muted hover:underline">
               Accueil
             </Link>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Écoute & associe</p>
-            <h1 className="text-2xl font-bold text-indigo-900 text-center dark:text-indigo-100">
+            <p className="text-xs uppercase tracking-wide ui-muted">Écoute & associe</p>
+            <h1 className="text-2xl font-bold ui-ink text-center">
               {meta?.titre ?? 'Écoute le nombre'}
             </h1>
           </div>
           <div className="flex justify-end">
-            <Link to="/settings/quantity-sound" className="text-sm text-gray-600 hover:underline dark:text-gray-300">
+            <Link to="/settings/quantity-sound" className="text-sm ui-muted hover:underline">
               Réglages
             </Link>
           </div>
@@ -207,13 +199,13 @@ export default function QuantitySound({ meta }) {
             type="button"
             onClick={replayNumber}
             aria-label="Écouter le nombre"
-            className="w-20 h-20 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-indigo-300 flex items-center justify-center"
+            className="w-20 h-20 rounded-full ui-primary text-white ui-shadow hover:bg-indigo-500 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-indigo-300 flex items-center justify-center"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-10 w-10 fill-current">
               <path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zm-2.5-8v2.06a6.5 6.5 0 0 1 0 11.88V20a8.5 8.5 0 0 0 0-16z" />
             </svg>
           </button>
-          <div className="max-w-md text-center text-sm text-gray-600 dark:text-gray-300">
+          <div className="max-w-md text-center text-sm ui-muted">
             <p>{instruction}</p>
             {speechMessage && <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{speechMessage}</p>}
           </div>
@@ -221,7 +213,7 @@ export default function QuantitySound({ meta }) {
       </header>
 
       <main className="flex-1 flex flex-col gap-4 items-stretch">
-        <div className="flex-1 w-full rounded-3xl border border-indigo-100 bg-white/90 p-4 shadow-inner sm:p-6 dark:border-indigo-900 dark:bg-gray-800/90">
+        <div className="flex-1 w-full rounded-3xl border ui-border ui-panel p-4 ui-shadow sm:p-6">
           <div className="grid h-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
             {round.options.map((quantity) => (
               <button
@@ -229,7 +221,7 @@ export default function QuantitySound({ meta }) {
                 type="button"
                 onClick={() => handleChoice(quantity)}
                 aria-label={settings.displayMode === 'dice' ? `Face de dé ${quantity}` : `Chiffre ${quantity}`}
-                className={`min-h-[150px] rounded-3xl border-4 px-3 py-5 shadow transition-all flex items-center justify-center focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-indigo-300 sm:min-h-[210px] ${getButtonClasses(choiceStates[quantity])}`}
+                className={`min-h-[150px] rounded-3xl border-4 px-3 py-5 ui-shadow transition-all flex items-center justify-center focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-indigo-300 sm:min-h-[210px] ${getButtonClasses(choiceStates[quantity])}`}
               >
                 {settings.displayMode === 'dice' ? (
                   <DiceFace quantity={quantity} />
@@ -240,7 +232,7 @@ export default function QuantitySound({ meta }) {
             ))}
           </div>
         </div>
-        <div aria-live="polite" className="min-h-[1.75rem] text-center text-lg font-semibold text-gray-700 dark:text-gray-200">
+        <div aria-live="polite" className="min-h-[1.75rem] text-center text-lg font-semibold ui-muted">
           {feedback}
         </div>
       </main>
@@ -251,10 +243,10 @@ export default function QuantitySound({ meta }) {
 function getButtonClasses(state) {
   switch (state) {
     case 'success':
-      return 'bg-green-100 border-green-500 text-green-700 shadow-lg dark:bg-green-950 dark:text-green-300'
+      return 'ui-success-surface ui-success-border ui-success-ink ui-shadow'
     case 'error':
-      return 'bg-red-100 border-red-500 text-red-700 shadow-lg dark:bg-red-950 dark:text-red-300'
+      return 'ui-error-surface ui-error-border ui-error-ink ui-shadow'
     default:
-      return 'bg-white border-indigo-200 text-indigo-900 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-xl dark:bg-gray-900 dark:border-indigo-800 dark:text-indigo-100'
+      return 'ui-surface ui-border-strong ui-ink hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-xl'
   }
 }

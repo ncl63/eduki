@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { lazy } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getExerciseById } from '../data/exercises.js'
-import LetterFind from '../exercises/LetterFind.jsx'
-import WordRecompose from '../exercises/WordRecompose.jsx'
-import LetterSound from '../exercises/LetterSound.jsx'
-import QuantitySound from '../exercises/QuantitySound.jsx'
+const LetterFind = lazy(() => import('../exercises/LetterFind.jsx'))
+const WordRecompose = lazy(() => import('../exercises/WordRecompose.jsx'))
+const LetterSound = lazy(() => import('../exercises/LetterSound.jsx'))
+const QuantitySound = lazy(() => import('../exercises/QuantitySound.jsx'))
 
 const EXERCISE_COMPONENTS = {
   'letter-find': LetterFind,

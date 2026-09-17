@@ -22,11 +22,11 @@ npm run build     # Build de production (output: dist/)
 npm run preview   # Prévisualiser le build
 ```
 
-Pas de commande de test ni de lint configurée.
+Contrôles : npm run lint, npm run build, npm run test:e2e (ou npm run check). Voir README.md pour les prérequis navigateur.
 
 ## Stack technique
 
-- **React 18** + **Vite 5** + **Tailwind CSS v4** (sans `tailwind.config.js`)
+- **React 18** + **Vite 7** + **Tailwind CSS v4** (sans `tailwind.config.js`)
 - **React Router DOM 7** pour le routage côté client
 - Déploiement automatique sur **GitHub Pages** via GitHub Actions (push sur `main`)
 - Site 100% statique, pas de backend, pas de base de données
@@ -39,9 +39,10 @@ Pas de commande de test ni de lint configurée.
 src/
 ├── main.jsx                  # Point d'entrée React
 ├── App.jsx                   # Routeur principal + ErrorBoundary
-├── index.css                 # Styles globaux + animations Tailwind v4
+├── index.css                 # Tailwind et styles existants des exercices
+├── styles/shell.css          # Tokens et styles du nouvel accueil
 ├── components/
-│   ├── EnTete.jsx            # Header avec navigation et toggle dark mode
+│   ├── EnTete.jsx            # Navigation de l’accueil et thème
 │   ├── CarteExercice.jsx     # Carte d'exercice sur la page d'accueil
 │   └── ErrorBoundary.jsx     # Capture les crashs avec UI de fallback
 ├── contexts/
@@ -107,7 +108,7 @@ Chaque exercice dans `src/exercises/` suit le même pattern :
 
 - **Audio iOS/PWA** : l'audio nécessite une interaction utilisateur pour se débloquer. `LetterSound.jsx` recrée l'élément Audio à chaque playback et gère le bfcache Safari.
 - **Tailwind v4** : pas de `tailwind.config.js`. Si tu en crées un, ajoute `@config "./tailwind.config.js"` en tête de `index.css`.
-- **GitHub Pages** : le build utilise `BASE_PATH=/<nom-du-repo>/` pour les assets. Le routeur utilise `import.meta.env.BASE_URL` comme basename.
+- **GitHub Pages** : le build utilise `BASE_PATH=/<nom-du-repo>/` pour les assets. HashRouter utilise des routes /eduki/#/ex/... compatibles avec les rechargements sur GitHub Pages.
 
 ## Règles de développement
 
@@ -139,3 +140,7 @@ Format attendu si les rôles sont explicités :
 @ui ✓ — [observation courte]
 @code ✓ — [observation courte]
 ```
+
+## Étape actuelle — accueil minimaliste
+
+Source de départ : commit 9563ab9 de ncl63/eduki. Aucun univers de jeu ni profil sur le nouvel accueil. Les exercices restent indépendants et seront refaits un par un. La suppression du suivi par profil ne doit pas effacer les données locales historiques. Consulter README.md pour les décisions de routage et les limites de validation.

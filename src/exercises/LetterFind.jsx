@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadJSON, saveJSON, loadInt, saveInt, clampInt, clampRatio, randomPick, shuffleInPlace, shuffle } from '../utils/storage.js'
-import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
 import { LETTER_STYLE_OPTIONS, DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
 export { LETTER_STYLE_OPTIONS, fontForStyle }
@@ -20,12 +19,11 @@ export const DEFAULT_SETTINGS = {
 }
 
 export default function LetterFind({ meta }) {
-  const [settings, setSettings] = useState(() => loadLetterSettings())
+  const [settings] = useState(() => loadLetterSettings())
   const [cards, setCards] = useState(() => makeScatterRound(settings))
   const [feedback, setFeedback] = useState(null)
   const [stars, setStars] = useState(() => loadStars())
   const timeoutRef = useRef(null)
-  const { startRound, recordError, completeRound } = useExerciseTracking('letter-find')
 
   const remainingTargets = useMemo(
     () => cards.filter((card) => card.isTarget && card.state !== 'locked').length,
@@ -62,15 +60,10 @@ export default function LetterFind({ meta }) {
     setFeedback(null)
   }, [settings])
 
-  // Démarrer le suivi pour le premier tour
-  useEffect(() => {
-    startRound({ targetLetter: settings.targetLetter, totalCards: settings.itemsCount })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function refreshRound() {
     setCards(makeScatterRound(settings))
     setFeedback(null)
-    startRound({ targetLetter: settings.targetLetter, totalCards: settings.itemsCount })
   }
 
   function handleCardClick(cardId) {
@@ -87,7 +80,6 @@ export default function LetterFind({ meta }) {
         if (card.isTarget) {
           return { ...card, state: 'locked', result: 'good' }
         }
-        recordError()
         return { ...card, result: 'bad' }
       })
 
@@ -103,7 +95,6 @@ export default function LetterFind({ meta }) {
       if (clicked.isTarget) {
         const allFound = next.every((card) => !card.isTarget || card.state === 'locked')
         if (allFound) {
-          completeRound()
           const newStars = Math.min(STAR_GOAL, stars + 1)
           setStars(newStars)
           saveStars(newStars)
@@ -138,11 +129,11 @@ export default function LetterFind({ meta }) {
   const targetLetter = settings.targetLetter
 
   return (
-    <div className="h-screen px-4 py-3 md:px-8 md:py-4 flex flex-col gap-3 overflow-hidden">
+    <div className="activity-page h-screen px-4 py-3 md:px-8 md:py-4 flex flex-col gap-3 overflow-hidden">
       <header className="w-full space-y-2 shrink-0">
         <div className="w-full grid grid-cols-3 items-center">
           <div>
-            <Link to="/" className="text-sm text-gray-600 hover:underline">
+            <Link to="/" className="text-sm ui-muted hover:underline">
               ⬅️ Accueil
             </Link>
           </div>
@@ -150,7 +141,7 @@ export default function LetterFind({ meta }) {
             {settings.letterStyle === 'mixte' ? (
               <>
                 <span
-                  className="font-bold text-indigo-900 leading-none"
+                  className="font-bold ui-ink leading-none"
                   style={{
                     fontSize: 'clamp(36px, 8vw, 90px)',
                     fontFamily: fontForStyle('baton'),
@@ -165,7 +156,7 @@ export default function LetterFind({ meta }) {
                   /
                 </span>
                 <span
-                  className="font-bold text-indigo-900 leading-none"
+                  className="font-bold ui-ink leading-none"
                   style={{
                     fontSize: 'clamp(22px, 5vw, 56px)',
                     fontFamily: fontForStyle('script'),
@@ -176,7 +167,7 @@ export default function LetterFind({ meta }) {
               </>
             ) : (
               <span
-                className="font-bold text-indigo-900 leading-none"
+                className="font-bold ui-ink leading-none"
                 style={{
                   fontSize: 'clamp(48px, 12vw, 140px)',
                   fontFamily,
@@ -187,7 +178,7 @@ export default function LetterFind({ meta }) {
             )}
           </div>
           <div className="flex justify-end">
-            <Link to="/settings/letters" className="text-sm text-gray-600 hover:underline">
+            <Link to="/settings/letters" className="text-sm ui-muted hover:underline">
               Réglages ⚙️
             </Link>
           </div>
@@ -195,11 +186,11 @@ export default function LetterFind({ meta }) {
         <div className="space-y-2">
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-500 transition-all" 
+              className="h-full ui-progress transition-all"
               style={{ width: `${progress * 100}%` }}
             />
           </div>
-          <div className="flex justify-between text-sm text-gray-600">
+          <div className="flex justify-between text-sm ui-muted">
             <span>{meta?.titre ?? 'Trouve la lettre'}</span>
             <span>
               {stars} / {STAR_GOAL} ⭐
@@ -210,7 +201,7 @@ export default function LetterFind({ meta }) {
 
       <main className="flex-1 flex flex-col gap-2 items-stretch overflow-hidden min-h-0">
         <div
-          className="relative flex-1 w-full bg-white/90 rounded-3xl border border-indigo-100 shadow-inner min-h-0"
+          className="relative flex-1 w-full ui-panel rounded-3xl border ui-border ui-shadow min-h-0"
         >
           {cards.map((card) => (
             <LetterCard
@@ -222,7 +213,7 @@ export default function LetterFind({ meta }) {
             />
           ))}
         </div>
-        <div className="text-base md:text-lg text-gray-600 text-center">
+        <div className="text-base md:text-lg ui-muted text-center">
           {feedback ? feedback : remainingTargets === 1 ? 'Encore 1 lettre à trouver.' : `Encore ${remainingTargets} lettres à trouver.`}
         </div>
       </main>
@@ -237,20 +228,20 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
   const effectiveStyle = card.cardStyle || letterStyle
   const effectiveFont = card.cardStyle ? fontForStyle(card.cardStyle) : fontFamily
   const isScript = effectiveStyle === 'script'
-  let bg = 'bg-white'
-  let border = 'border-indigo-200'
-  let text = 'text-indigo-900'
+  let bg = 'ui-surface'
+  let border = 'ui-border-strong'
+  let text = 'ui-ink'
 
   if (result === 'bad') {
-    bg = 'bg-red-100'
-    border = 'border-red-300'
-    text = 'text-red-700'
+    bg = 'ui-error-surface'
+    border = 'ui-error-border'
+    text = 'ui-error-ink'
   }
 
   if (result === 'good' || locked) {
-    bg = 'bg-green-100'
-    border = 'border-green-300'
-    text = 'text-green-800'
+    bg = 'ui-success-surface'
+    border = 'ui-success-border'
+    text = 'ui-success-ink'
   }
 
   return (
@@ -258,7 +249,7 @@ function LetterCard({ card, fontFamily, letterStyle, onClick }) {
       type="button"
       onClick={onClick}
       disabled={locked}
-      className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} shadow-lg font-semibold -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
+      className={`absolute rounded-[2.5rem] border ${border} ${bg} ${text} ui-shadow font-semibold -translate-x-1/2 -translate-y-1/2 transition select-none focus:outline-none focus:ring-4 focus:ring-indigo-200 flex items-center justify-center overflow-hidden ${
         locked ? 'cursor-not-allowed' : 'hover:scale-110'
       } ${isScript ? 'text-3xl md:text-4xl' : 'text-5xl md:text-6xl leading-none'}`}
       style={{

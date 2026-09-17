@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadJSON, saveJSON, shuffle, randomPick, randomPickAvoiding } from '../utils/storage.js'
-import { useExerciseTracking } from '../hooks/useExerciseTracking.js'
+import { loadJSON, saveJSON, shuffle, randomPickAvoiding } from '../utils/storage.js'
 import { DEFAULT_LETTER_STYLE, fontForStyle, formatLetterCase, sanitizeLetterStyle } from '../utils/fontStyle.js'
 
 const SETTINGS_KEY = 'settings_words_v1'
@@ -48,14 +47,9 @@ export default function WordRecompose({ meta }) {
   })
   const [feedback, setFeedback] = useState(null)
   const timeoutsRef = useRef([])
-  const { startRound, recordError, completeRound } = useExerciseTracking('word-recompose')
   const sizes = useMemo(() => computeSizes(round.targetLetters.length), [round.targetLetters.length])
   const fontFamily = fontForStyle(settings.letterStyle)
 
-  // Suivi du premier tour
-  useEffect(() => {
-    startRound({ targetWord: round.targetWord, letterCount: round.targetLetters.length })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -100,7 +94,6 @@ export default function WordRecompose({ meta }) {
     lastWordRef.current = r.targetWord
     setRound(r)
     setFeedback(null)
-    startRound({ targetWord: r.targetWord, letterCount: r.targetLetters.length })
   }
 
   function handleLetterClick(letterId) {
@@ -133,7 +126,6 @@ export default function WordRecompose({ meta }) {
         const completed = nextSlots.every((slot) => slot != null)
 
         if (completed) {
-          completeRound()
           setFeedback('Bravo !')
           scheduleTimeout(() => {
             refreshRound()
@@ -151,7 +143,6 @@ export default function WordRecompose({ meta }) {
 
       const nextPool = current.pool.slice()
       nextPool[letterIndex] = { ...nextPool[letterIndex], state: 'error' }
-      recordError()
       setFeedback("Essaie encore.")
 
       scheduleTimeout(() => {
@@ -177,11 +168,11 @@ export default function WordRecompose({ meta }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 md:px-10 md:py-10 flex flex-col gap-8">
+    <div className="activity-page min-h-screen px-4 py-6 md:px-10 md:py-10 flex flex-col gap-8">
       <header className="w-full space-y-3">
         <div className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center">
           <div>
-            <Link to="/" className="text-sm text-gray-600 hover:underline">
+            <Link to="/" className="text-sm ui-muted hover:underline">
               ⬅️ Accueil
             </Link>
           </div>
@@ -199,7 +190,7 @@ export default function WordRecompose({ meta }) {
                   >
                     <span
                       className={`font-bold leading-none text-center transition-colors ${
-                        filled ? 'text-green-500' : 'text-indigo-900'
+                        filled ? 'ui-success-ink' : 'ui-ink'
                       }`}
                       style={{ fontSize: 'inherit', lineHeight: 1.1 }}
                     >
@@ -221,12 +212,12 @@ export default function WordRecompose({ meta }) {
             </div>
           </div>
           <div className="flex justify-end">
-            <Link to="/settings/words" className="text-sm text-gray-600 hover:underline">
+            <Link to="/settings/words" className="text-sm ui-muted hover:underline">
               Réglages ⚙️
             </Link>
           </div>
         </div>
-        <div className="flex justify-between text-sm text-gray-600">
+        <div className="flex justify-between text-sm ui-muted">
           <span>{meta?.titre ?? 'Recompose le mot'}</span>
           <span>
             {round.targetLetters.length - remainingSlots} / {round.targetLetters.length}
@@ -236,7 +227,7 @@ export default function WordRecompose({ meta }) {
 
       <main className="flex-1 flex flex-col gap-8">
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="w-full flex-1 bg-white/90 rounded-3xl border border-indigo-100 shadow-inner p-6 flex flex-col items-center justify-center gap-6">
+          <div className="w-full flex-1 ui-panel rounded-3xl border ui-border ui-shadow p-6 flex flex-col items-center justify-center gap-6">
             <div className="w-full flex flex-nowrap justify-center" style={{ gap: sizes.slot.gap }}>
               {round.targetLetters.map((char, index) => (
                 <LetterSlot
@@ -264,7 +255,7 @@ export default function WordRecompose({ meta }) {
               }
 
               return (
-                <div className="text-base md:text-lg text-gray-600 text-center min-h-[1.5rem]">
+                <div className="text-base md:text-lg ui-muted text-center min-h-[1.5rem]">
                   {message}
                 </div>
               )
@@ -294,7 +285,7 @@ function LetterSlot({ value, sizes, fontFamily, letterStyle }) {
   return (
     <div
       className={`rounded-2xl border-2 flex items-center justify-center font-semibold transition ${
-        filled ? 'bg-indigo-100 border-indigo-300 text-indigo-900' : 'bg-white border-indigo-200 text-indigo-300'
+        filled ? 'ui-selected-soft ui-selection-border ui-ink' : 'ui-surface ui-border-strong ui-placeholder'
       }`}
       style={{
         flex: '0 1 auto',
@@ -311,20 +302,20 @@ function LetterSlot({ value, sizes, fontFamily, letterStyle }) {
 
 function LetterChoice({ letter, sizes, fontFamily, letterStyle, onClick }) {
   const { char, state } = letter
-  let bg = 'bg-white'
-  let border = 'border-indigo-200'
-  let text = 'text-indigo-900'
+  let bg = 'ui-surface'
+  let border = 'ui-border-strong'
+  let text = 'ui-ink'
   let ring = 'focus:ring-indigo-200'
 
   if (state === 'used') {
-    bg = 'bg-green-100'
-    border = 'border-green-300'
-    text = 'text-green-800'
+    bg = 'ui-success-surface'
+    border = 'ui-success-border'
+    text = 'ui-success-ink'
     ring = 'focus:ring-green-200'
   } else if (state === 'error') {
-    bg = 'bg-red-100'
-    border = 'border-red-300'
-    text = 'text-red-700'
+    bg = 'ui-error-surface'
+    border = 'ui-error-border'
+    text = 'ui-error-ink'
     ring = 'focus:ring-red-200'
   }
 
@@ -333,7 +324,7 @@ function LetterChoice({ letter, sizes, fontFamily, letterStyle, onClick }) {
       type="button"
       onClick={onClick}
       disabled={state === 'used'}
-      className={`inline-flex items-center justify-center rounded-[3.75rem] border ${border} ${bg} ${text} shadow-lg font-bold leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
+      className={`inline-flex items-center justify-center rounded-[3.75rem] border ${border} ${bg} ${text} ui-shadow font-bold leading-none transition select-none focus:outline-none focus:ring-4 ${ring} ${
         state === 'used' ? 'cursor-not-allowed' : 'hover:scale-[1.03]'
       }`}
       style={{
