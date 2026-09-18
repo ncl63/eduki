@@ -6,7 +6,10 @@ test('accueil, filtres et navigation sans profils', async ({ page }) => {
   page.on('pageerror', error => errors.push(error.message))
   await page.goto('./')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Les exercices')
-  await expect(page.locator('.exercise-card')).toHaveCount(5)
+  await expect(page.locator('.exercise-card')).toHaveCount(6)
+  for (const title of ['Trouve la lettre', 'Écoute la lettre', 'Écoute le nombre', 'Recompose le mot', 'Montre la forme']) {
+    await expect(page.getByRole('heading', { name: title })).toBeVisible()
+  }
   await expect(page.getByText(/profil/i)).toHaveCount(0)
   await page.getByRole('button', { name: 'Lettres', exact: true }).click()
   await expect(page.locator('.exercise-card')).toHaveCount(2)
@@ -15,8 +18,11 @@ test('accueil, filtres et navigation sans profils', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Recompose le mot' })).toBeVisible()
   await page.getByRole('button', { name: 'Nombres', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Écoute le nombre' })).toBeVisible()
+  await page.getByRole('button', { name: 'Graphisme', exact: true }).click()
+  await expect(page.locator('.exercise-card')).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'Suis les pointillés' })).toBeVisible()
   await page.getByRole('button', { name: 'Tout voir' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(5)
+  await expect(page.locator('.exercise-card')).toHaveCount(6)
   await expect(page.locator('.exercise-card').first()).toBeInViewport()
   expect(errors).toEqual([])
 })
@@ -76,13 +82,13 @@ test('stockage indisponible et page inconnue', async ({ page }) => {
     Storage.prototype.setItem = () => { throw new DOMException('Unavailable', 'SecurityError') }
   })
   await page.goto('./')
-  await expect(page.locator('.exercise-card')).toHaveCount(5)
+  await expect(page.locator('.exercise-card')).toHaveCount(6)
   await page.getByRole('button', { name: 'Activer le thème sombre' }).click()
   await expect(page.locator('html')).toHaveClass('dark')
   await page.goto('./#/inconnue')
   await expect(page.getByRole('heading', { name: 'Cette page n’existe pas.' })).toBeVisible()
   await page.getByRole('link', { name: 'Retour aux exercices' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(5)
+  await expect(page.locator('.exercise-card')).toHaveCount(6)
 })
 
 test('navigation clavier depuis le lien d’évitement', async ({ page }) => {
@@ -117,5 +123,5 @@ test('Grafokwest et premier exercice de désignation', async ({ page }, testInfo
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.screenshot({ path: testInfo.outputPath('designation.png'), fullPage: true })
   await page.getByRole('button', { name: 'Tout voir' }).click()
-  await expect(page.locator('.exercise-card')).toHaveCount(5)
+  await expect(page.locator('.exercise-card')).toHaveCount(6)
 })

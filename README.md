@@ -20,7 +20,7 @@ Ouvrir http://localhost:5173/eduki/ dans un navigateur. Ne pas ouvrir index.html
 npm run check
 ```
 
-Cette commande lance ESLint, construit le site puis exécute les tests Playwright sur le build de production, avec le sous-chemin GitHub Pages.
+Cette commande lance ESLint, les tests unitaires de géométrie, construit le site puis exécute les tests Playwright sur le build de production, avec le sous-chemin GitHub Pages.
 Sur Windows, les tests utilisent Microsoft Edge installé. Sur Linux, installer Chromium avant les tests :
 
 ```sh
@@ -34,7 +34,8 @@ Les tests de format iPhone utilisent une émulation Chromium : ils ne remplacent
 
 - React 18 conservé ; Vite 7 et Tailwind 4 actualisés.
 - `src/App.jsx` : routes et chargement différé des pages.
-- `src/data/exercises.js` : catalogue unique des quatre exercices.
+- `src/data/exercises.js` : catalogue unique des six exercices.
+- `src/data/tracingPaths.js` et `src/tracing/` : données, moteur Pointer Events et validation pure des parcours de graphisme.
 - `src/pages/Home.jsx` : accueil, filtres et mode d’emploi.
 - `src/components/EnTete.jsx`, `CarteExercice.jsx`, `Icon.jsx` : composants de l’accueil.
 - `src/styles/shell.css` : tokens visuels, composants et adaptations mobile de l’accueil.

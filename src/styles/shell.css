@@ -41,6 +41,7 @@ body { margin:0; background:var(--paper); color:var(--ink); }
 .green .exercise-preview { background:#eaf2ed; color:#54856b; }
 .sand .exercise-preview { background:#f8f0e5; color:#a87a43; }
 .peach .exercise-preview { background:#f8eee9; color:#8d6257; }
+.aqua .exercise-preview { background:#e7f4f1; color:#247465; }
 .letters { display:flex; align-items:center; gap:10px; font-size:39px; font-weight:550; }
 .letters>span { width:43px; text-align:center; color:#a39dbe; }
 .letters b { background:white; border:1.5px solid #8b82b2; color:#645a94; border-radius:9px; transform:rotate(-7deg); height:61px; line-height:56px; width:52px; text-align:center; font-weight:550; box-shadow:0 4px 0 #7e74a91c; }
@@ -61,6 +62,11 @@ body { margin:0; background:var(--paper); color:var(--ink); }
 .preview-circle { width:48px; height:48px; border-radius:50%; }
 .preview-square { width:48px; height:48px; border-radius:3px; }
 .preview-triangle { width:0; height:0; background:transparent!important; border-left:28px solid transparent; border-right:28px solid transparent; border-bottom:51px solid currentColor; }
+.trace-preview { width:78%; max-width:190px; overflow:visible; }
+.trace-preview path { fill:none; stroke:currentColor; stroke-width:8; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:8 12; }
+.trace-preview circle { stroke:#fff; stroke-width:3; }
+.trace-preview-start { fill:#198754; }
+.trace-preview-end { fill:#fff; stroke:#a75d00!important; stroke-width:5!important; }
 .card-copy { padding:21px 18px 18px; }
 .card-category { font-size:8px; letter-spacing:1.3px; font-weight:750; color:var(--muted); text-transform:uppercase; }
 .card-copy h2 { font-size:18px; font-weight:750; letter-spacing:-.4px; margin:8px 0; min-height:50px; }
@@ -71,6 +77,8 @@ body { margin:0; background:var(--paper); color:var(--ink); }
 .card-bottom>a { display:flex; align-items:center; gap:5px; min-height:44px; text-decoration:none; }
 .card-bottom svg { width:14px; height:14px; }
 .card-bottom a:hover { color:var(--blue); }
+.card-ready { margin-left:auto; font-weight:700; color:#247465; }
+.dark .card-ready { color:#8fd5c8; }
 .guide-strip { display:flex; gap:17px; align-items:center; margin:38px 0 54px; padding:22px 25px; border:1px solid var(--line); border-radius:10px; }
 .guide-icon { width:38px; height:38px; border-radius:10px; background:var(--soft); display:grid; place-items:center; color:var(--muted); flex-shrink:0; }
 .guide-strip h2 { font-size:12px; font-weight:700; margin:0 0 5px; }

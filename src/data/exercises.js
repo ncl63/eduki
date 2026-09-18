@@ -50,6 +50,16 @@ export const EXERCISES = [
     settingsPath: '/settings/designation/simple-shapes',
     designationSetId: 'simple-shapes',
   },
+  {
+    id: 'follow-dots',
+    titre: 'Suis les pointillés',
+    niveau: 'CP',
+    category: 'Graphisme',
+    skill: 'Motricité fine',
+    tone: 'aqua',
+    description: 'Suis des obliques avec ton doigt, à ton rythme.',
+    tracingPackId: 'oblique-pre-m',
+  },
 ]
 
 export function getExerciseById(id) {

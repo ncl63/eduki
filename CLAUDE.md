@@ -10,7 +10,7 @@ Site web d'exercices éducatifs sur mesure créé pour **Matija**, un enfant acc
 ## Public cible
 
 - Un enfant (Matija) avec des besoins éducatifs particuliers
-- Exercices centrés sur la lecture : reconnaissance de lettres et de mots
+- Exercices centrés sur la lecture, la désignation et le graphisme préparatoire à l’écriture
 - Interface pensée pour être utilisée avec ou sans aide de l'adulte accompagnateur
 
 ## Commandes
@@ -49,12 +49,17 @@ src/
 │   └── ThemeContext.jsx       # Dark mode (localStorage + prefers-color-scheme)
 ├── data/
 │   ├── exercises.js           # Registre des exercices (id, titre, niveau, description)
-│   └── designationSets.js     # Lots de contenus réutilisables du moteur de désignation
-├── exercises/                 # Composants autonomes — chacun gère ses propres settings
+│   ├── designationSets.js     # Lots de contenus réutilisables du moteur de désignation
+│   └── tracingPaths.js        # Parcours de graphisme pilotés par des données
+├── exercises/                 # Composants autonomes pilotés par leurs contenus
 │   ├── LetterFind.jsx         # Trouve la lettre (recherche visuelle)
 │   ├── LetterSound.jsx        # Écoute la lettre (audio m4a + Web Audio API)
 │   ├── WordRecompose.jsx      # Recompose le mot (séquencement de lettres)
 │   ├── Designation.jsx        # Moteur générique image + consigne sonore
+│   └── FollowDots.jsx         # Interface épurée de suivi des pointillés
+├── tracing/
+│   ├── useTracingEngine.js    # Pointer Events, geste courant et reprise
+│   └── traceValidation.js     # Géométrie et validation tolérante, sans React
 ├── pages/
 │   ├── Home.jsx               # Page d'accueil (bibliothèque d'exercices)
 │   ├── ExerciseRunner.jsx     # Routeur dynamique vers le bon exercice
@@ -82,6 +87,10 @@ Chaque exercice dans `src/exercises/` suit le même pattern :
 4. **buildRound()** : génère un nouveau round aléatoire
 5. **Composant principal** : gère le state du round, le feedback, et les transitions
 6. Chaque exercice est autonome et reçoit `{ meta }` en prop depuis ExerciseRunner
+
+Le graphisme conserve en plus une séparation stricte entre les données des parcours,
+le moteur d’entrée, la validation géométrique pure et l’interface. Cette structure doit
+être réutilisée pour les futurs traits, formes et lettres plutôt que dupliquer le composant.
 
 ### Persistance
 - **localStorage** pour tous les réglages et la progression
