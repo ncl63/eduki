@@ -13,7 +13,7 @@ export const TRACING_PACKS = Object.freeze({
   'oblique-pre-m': Object.freeze({
     id: 'oblique-pre-m',
     title: 'Suis les pointillés',
-    completionMessage: 'Tu as suivi tous les chemins.',
+    completionMessage: 'Tu as suivi tous les chemins et tracé la lettre M.',
     paths: Object.freeze([
       Object.freeze({
         id: 'oblique-up-short',
@@ -96,6 +96,22 @@ export const TRACING_PACKS = Object.freeze({
         destination: Object.freeze({ x: 840, y: 190, radius: DESTINATION_RADIUS }),
         visualWidth: 28,
         tolerance: 78,
+      }),
+      Object.freeze({
+        id: 'letter-m',
+        name: 'La lettre M',
+        difficulty: 5,
+        points: Object.freeze([
+          Object.freeze({ x: 180, y: 470 }),
+          Object.freeze({ x: 180, y: 150 }),
+          Object.freeze({ x: 500, y: 390 }),
+          Object.freeze({ x: 820, y: 150 }),
+          Object.freeze({ x: 820, y: 470 }),
+        ]),
+        start: Object.freeze({ x: 180, y: 470, radius: START_RADIUS }),
+        destination: Object.freeze({ x: 820, y: 470, radius: DESTINATION_RADIUS }),
+        visualWidth: 28,
+        tolerance: 76,
       }),
     ]),
   }),
