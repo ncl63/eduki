@@ -16,13 +16,13 @@ import {
 
 const pack = getTracingPack('oblique-pre-m')
 
-test('le pack expose six parcours valides et leurs extrémités explicites', () => {
+test('le pack expose sept parcours valides et leurs extrémités explicites', () => {
   assert.deepEqual(TRACE_VIEW_BOX, { width: 1000, height: 620 })
   assert.equal(TRACING_PACKS['oblique-pre-m'], pack)
   assert.equal(pack.title, 'Suis les pointillés')
-  assert.equal(pack.completionMessage, 'Tu as suivi tous les chemins.')
-  assert.equal(pack.paths.length, 6)
-  assert.equal(new Set(pack.paths.map(({ id }) => id)).size, 6)
+  assert.equal(pack.completionMessage, 'Tu as suivi tous les chemins et tracé la lettre M.')
+  assert.equal(pack.paths.length, 7)
+  assert.equal(new Set(pack.paths.map(({ id }) => id)).size, 7)
 
   for (const path of pack.paths) {
     assert.ok(path.id)
@@ -191,26 +191,22 @@ test('les points dupliqués ne rendent pas les métriques non finies', () => {
   assert.ok(Number.isFinite(result.traceLengthRatio))
 })
 
-test('le moteur accepte une future trajectoire du M en quatre segments', () => {
-  const futureMPath = {
-    id: 'future-m-four-gestures',
-    name: 'M en quatre gestes',
-    difficulty: 5,
-    points: [
-      { x: 180, y: 470 },
-      { x: 180, y: 150 },
-      { x: 500, y: 390 },
-      { x: 820, y: 150 },
-      { x: 820, y: 470 },
-    ],
-    start: { x: 180, y: 470, radius: 54 },
-    destination: { x: 820, y: 470, radius: 54 },
-    visualWidth: 28,
-    tolerance: 76,
-  }
+test('le tracé final est la lettre M et se réussit en quatre segments', () => {
+  const mPath = pack.paths.at(-1)
+
+  assert.equal(mPath.id, 'letter-m')
+  assert.equal(mPath.name, 'La lettre M')
+  assert.deepEqual(mPath.points, [
+    { x: 180, y: 470 },
+    { x: 180, y: 150 },
+    { x: 500, y: 390 },
+    { x: 820, y: 150 },
+    { x: 820, y: 470 },
+  ])
+
   const result = evaluateTrace({
-    path: futureMPath,
-    tracePoints: futureMPath.points,
+    path: mPath,
+    tracePoints: mPath.points,
   })
 
   assert.equal(result.startedCorrectly, true)

@@ -32,7 +32,7 @@ test('écran épuré, départ obligatoire et bouton recommencer', async ({ page 
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await expect(page.getByRole('heading', { name: 'Suis les pointillés' })).toBeVisible()
-  await expect(page.getByText('1 sur 6')).toBeVisible()
+  await expect(page.getByText('1 sur 7')).toBeVisible()
   await expect(page.getByRole('link', { name: /Accueil/ })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Recommencer', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: /Réglages/ })).toHaveCount(0)
@@ -59,27 +59,32 @@ test('écran épuré, départ obligatoire et bouton recommencer', async ({ page 
   expect(errors).toEqual([])
 })
 
-test('les six tracés se réussissent à la souris sans score ni message négatif', async ({ page }, testInfo) => {
+test('les sept tracés, jusqu’à la lettre M, se réussissent à la souris', async ({ page }, testInfo) => {
   const pathIds = []
-  for (let index = 0; index < 6; index += 1) {
+  for (let index = 0; index < 7; index += 1) {
     pathIds.push(await page.getByTestId('tracing-surface').getAttribute('data-path-id'))
     if (index === 5) {
       await page.screenshot({ path: testInfo.outputPath('zigzag.png'), fullPage: true })
+    }
+    if (index === 6) {
+      await expect(page.getByText('La lettre M')).toBeVisible()
+      await page.screenshot({ path: testInfo.outputPath('lettre-m.png'), fullPage: true })
     }
     await drawWithMouse(page, await sampleGuide(page))
     await expect(page.getByText('Bravo ! Tu as suivi le chemin.')).toBeVisible()
     await expect(page.getByText(/Essaie encore|échec|erreur/i)).toHaveCount(0)
     await expect(page.getByText(/\d+\s*%/)).toHaveCount(0)
-    const label = index === 5 ? 'Terminer' : 'Tracé suivant'
+    const label = index === 6 ? 'Terminer' : 'Tracé suivant'
     if (index === 0) {
       await page.screenshot({ path: testInfo.outputPath('reussite.png'), fullPage: true })
     }
     await page.getByRole('button', { name: label }).click()
   }
 
-  expect(new Set(pathIds).size).toBe(6)
+  expect(pathIds.at(-1)).toBe('letter-m')
+  expect(new Set(pathIds).size).toBe(7)
   await expect(page.getByTestId('tracing-complete')).toBeVisible()
-  await expect(page.getByText('Tu as suivi tous les chemins.')).toBeVisible()
+  await expect(page.getByText('Tu as suivi tous les chemins et tracé la lettre M.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Recommencer le parcours' })).toBeVisible()
 })
 
