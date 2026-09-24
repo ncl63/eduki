@@ -93,6 +93,8 @@
   border-radius: clamp(18px, 3vw, 30px);
   background: var(--tracing-board);
   box-shadow: 0 12px 32px rgb(30 49 73 / 10%);
+  /* WebKit applique plus fiablement touch-action sur le conteneur HTML que sur le SVG. */
+  touch-action: none;
 }
 
 .tracing-surface {

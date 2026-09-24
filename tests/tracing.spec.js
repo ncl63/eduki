@@ -100,8 +100,13 @@ test('route directe, rechargement, contraste et propriétés anti-gestes parasit
   await page.reload()
   await expect(page.getByTestId('tracing-surface')).toBeVisible()
   const surface = page.getByTestId('tracing-surface')
+  await expect(surface.locator('..')).toHaveCSS('touch-action', 'none')
   await expect(surface).toHaveCSS('touch-action', 'none')
   await expect(surface).toHaveCSS('user-select', 'none')
+  expect(await page.evaluate(() => ({
+    bodyOverflow: document.body.style.overflow,
+    htmlOverflow: document.documentElement.style.overflow,
+  }))).toEqual({ bodyOverflow: '', htmlOverflow: '' })
   expect((await new AxeBuilder({ page }).withRules(['color-contrast', 'link-name', 'button-name']).analyze()).violations).toEqual([])
   await page.getByRole('link', { name: /Accueil/ }).click()
   await expect(page.getByRole('heading', { name: 'Les exercices' })).toBeVisible()

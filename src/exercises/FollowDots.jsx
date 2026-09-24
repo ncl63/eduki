@@ -40,21 +40,6 @@ export default function FollowDots({ meta, pack }) {
     return () => window.clearTimeout(timeout)
   }, [phase])
 
-  useEffect(() => {
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    const previousBodyOverscroll = document.body.style.overscrollBehavior
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'none'
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
-      document.body.style.overscrollBehavior = previousBodyOverscroll
-    }
-  }, [])
-
   function advance() {
     if (pathIndex === pack.paths.length - 1) {
       setPackComplete(true)
