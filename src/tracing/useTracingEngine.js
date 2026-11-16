@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { distance, evaluateTrace, isPointInCircle } from './traceValidation.js'
+import { distance, evaluateTrace, isPointInCircle, isSegmentInTunnel } from './traceValidation.js'
 
 const MIN_POINT_DISTANCE = 2
 
@@ -26,7 +26,7 @@ function eventSamples(svg, event) {
  * Moteur d'un geste de tracé. Il ne connaît ni la progression du pack ni son interface.
  * Tous les pointeurs (doigt, stylet, souris) suivent le même chemin d'événements.
  */
-export function useTracingEngine(path) {
+export function useTracingEngine(path, tunnelRadius, onTunnelExit) {
   const [tracePoints, setTracePoints] = useState([])
   const [phase, setPhase] = useState('ready')
   const pointsRef = useRef([])
@@ -91,11 +91,15 @@ export function useTracingEngine(path) {
   const appendSamples = useCallback((samples) => {
     for (const point of samples) {
       const previous = pointsRef.current.at(-1)
+      if (tunnelRadius && !isSegmentInTunnel(previous, point, path.points, tunnelRadius)) {
+        return false
+      }
       if (!previous || distance(previous, point) >= MIN_POINT_DISTANCE) {
         pointsRef.current.push({ x: point.x, y: point.y })
       }
     }
-  }, [])
+    return true
+  }, [path.points, tunnelRadius])
 
   const finishGesture = useCallback((surface, pointerId, nextPhase) => {
     if (surface.hasPointerCapture?.(pointerId)) {
@@ -105,6 +109,14 @@ export function useTracingEngine(path) {
     publishPoints(true)
     setCurrentPhase(nextPhase)
   }, [publishPoints, setCurrentPhase])
+
+  const appendGestureEvent = useCallback((event) => {
+    if (appendSamples(eventSamples(event.currentTarget, event))) return true
+    pointsRef.current = []
+    finishGesture(event.currentTarget, event.pointerId, 'tunnel-exit')
+    onTunnelExit()
+    return false
+  }, [appendSamples, finishGesture, onTunnelExit])
 
   const validateCurrentTrace = useCallback(() => evaluateTrace({
     tracePoints: pointsRef.current,
@@ -135,21 +147,21 @@ export function useTracingEngine(path) {
   const onPointerMove = useCallback((event) => {
     if (event.pointerId !== activePointerRef.current || phaseRef.current !== 'drawing') return
     event.preventDefault()
-    appendSamples(eventSamples(event.currentTarget, event))
+    if (!appendGestureEvent(event)) return
     publishPoints()
 
     if (validateCurrentTrace().success) {
       finishGesture(event.currentTarget, event.pointerId, 'success')
     }
-  }, [appendSamples, finishGesture, publishPoints, validateCurrentTrace])
+  }, [appendGestureEvent, finishGesture, publishPoints, validateCurrentTrace])
 
   const onPointerUp = useCallback((event) => {
     if (event.pointerId !== activePointerRef.current) return
     event.preventDefault()
-    appendSamples(eventSamples(event.currentTarget, event))
+    if (!appendGestureEvent(event)) return
     const result = validateCurrentTrace()
     finishGesture(event.currentTarget, event.pointerId, result.success ? 'success' : 'restart')
-  }, [appendSamples, finishGesture, validateCurrentTrace])
+  }, [appendGestureEvent, finishGesture, validateCurrentTrace])
 
   const onPointerCancel = useCallback((event) => {
     if (event.pointerId !== activePointerRef.current) return

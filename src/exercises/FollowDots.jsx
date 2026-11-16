@@ -5,6 +5,7 @@ import { useTracingEngine } from '../tracing/useTracingEngine.js'
 import '../styles/tracing.css'
 
 const SUCCESS_ANIMATION_MS = 650
+const TUNNEL_RADIUS = 54
 
 function pathData(points) {
   return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
@@ -14,19 +15,25 @@ function polylinePoints(points) {
   return points.map((point) => `${point.x},${point.y}`).join(' ')
 }
 
-function instructionForPhase(phase) {
+function instructionForPhase(phase, tunnelRadius) {
+  if (phase === 'tunnel-exit') return 'Repars du point vert et reste dans le tunnel.'
   if (phase === 'success') return 'Bravo ! Tu as suivi le chemin.'
   if (phase === 'drawing') return 'Continue jusqu’à l’arrivée.'
   if (phase === 'restart') return 'Repars du point vert quand tu es prêt.'
+  if (tunnelRadius) return 'Pars du point vert et reste dans le tunnel jusqu’à la cible.'
   return 'Pose ton doigt sur le point vert, puis suis les pointillés.'
 }
 
 export default function FollowDots({ meta, pack }) {
+  const [level, setLevel] = useState(1)
   const [pathIndex, setPathIndex] = useState(0)
   const [packComplete, setPackComplete] = useState(false)
   const [canAdvance, setCanAdvance] = useState(false)
   const path = pack.paths[pathIndex]
-  const { tracePoints, phase, resetTrace, pointerHandlers } = useTracingEngine(path)
+  const tunnelRadius = level === 2 ? TUNNEL_RADIUS : 0
+  const { tracePoints, phase, resetTrace, pointerHandlers } = useTracingEngine(
+    path, tunnelRadius, () => setPathIndex(0),
+  )
   const guidePath = useMemo(() => pathData(path.points), [path.points])
 
   useEffect(() => {
@@ -67,6 +74,19 @@ export default function FollowDots({ meta, pack }) {
         </p>}
       </header>
 
+      <div className="tracing-levels" role="group" aria-label="Niveau de difficulté">
+        {[1, 2].map((option) => (
+          <button key={option} type="button" className="tracing-reset-button"
+            aria-pressed={level === option} onClick={() => {
+              if (level === option) return
+              setLevel(option)
+              restartPack()
+            }}>
+            {option === 2 ? 'Niveau 2 · Tunnel' : 'Niveau 1'}
+          </button>
+        ))}
+      </div>
+
       {packComplete ? (
         <main className="tracing-complete" data-testid="tracing-complete">
           <span className="tracing-complete-mark" aria-hidden="true">✓</span>
@@ -81,7 +101,7 @@ export default function FollowDots({ meta, pack }) {
         <main className="tracing-main">
           <div className="tracing-instruction" aria-live="polite">
             <strong>{path.name}</strong>
-            <span>{instructionForPhase(phase)}</span>
+            <span>{instructionForPhase(phase, tunnelRadius)}</span>
           </div>
 
           <div className={`tracing-board ${phase === 'success' ? 'is-success' : ''}`}>
@@ -94,6 +114,10 @@ export default function FollowDots({ meta, pack }) {
               onContextMenu={(event) => event.preventDefault()}
               {...pointerHandlers}
             >
+              {tunnelRadius > 0 && (
+                <path className="tracing-guide tracing-tunnel" d={guidePath}
+                  strokeWidth={tunnelRadius * 2} aria-hidden="true" />
+              )}
               <path
                 data-testid="tracing-guide"
                 className="tracing-guide"
@@ -124,7 +148,7 @@ export default function FollowDots({ meta, pack }) {
           <div className="tracing-actions">
             <button type="button" className="tracing-reset-button" onClick={resetTrace}>Recommencer</button>
             {phase === 'success' && !canAdvance && <span className="tracing-celebrating" role="status">Bravo !</span>}
-            {canAdvance && (
+            {phase === 'success' && canAdvance && (
               <button type="button" className="tracing-primary-button" onClick={advance}>
                 {pathIndex === pack.paths.length - 1 ? 'Terminer' : 'Tracé suivant'}
               </button>

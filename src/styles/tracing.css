@@ -11,6 +11,7 @@
   height: 100dvh;
   min-height: 480px;
   overflow: hidden;
+  --tracing-level-space: 52px;
   overscroll-behavior: none;
   padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   display: flex;
@@ -84,8 +85,8 @@
 
 .tracing-board {
   position: relative;
-  width: min(100%, calc((100dvh - 190px) * 1.6129), 1120px);
-  max-height: calc(100dvh - 190px);
+  width: min(100%, calc((100dvh - 190px - var(--tracing-level-space)) * 1.6129), 1120px);
+  max-height: calc(100dvh - 190px - var(--tracing-level-space));
   aspect-ratio: 1000 / 620;
   overflow: hidden;
   flex: 0 1 auto;
@@ -119,6 +120,7 @@
 }
 
 .tracing-guide { stroke: var(--tracing-guide); }
+.tracing-tunnel { stroke: #c5d5ef; }
 .tracing-user-line { stroke: var(--tracing-user); }
 .tracing-start,
 .tracing-destination { pointer-events: none; }
@@ -160,6 +162,16 @@
   border: 2px solid #345bc6;
   box-shadow: 0 6px 16px rgb(52 91 198 / 18%);
 }
+
+.tracing-levels {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.tracing-levels .tracing-reset-button { min-width: 0; min-height: 44px; padding: 6px 14px; }
+.tracing-levels [aria-pressed="true"] { background: #345bc6; border-color: #345bc6; color: #fff; }
 
 .tracing-primary-button:hover { background: #294aa7; border-color: #294aa7; }
 .tracing-celebrating { min-width: 160px; color: var(--activity-success-ink); font-size: 20px; font-weight: 850; text-align: center; }
@@ -224,7 +236,7 @@
   .tracing-title p { display: none; }
   .tracing-title h1 { font-size: 19px; }
   .tracing-instruction { min-height: 58px; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 14px; }
-  .tracing-board { width: min(100%, calc((100dvh - 205px) * 1.6129)); max-height: calc(100dvh - 205px); border-width: 2px; }
+  .tracing-board { width: min(100%, calc((100dvh - 205px - var(--tracing-level-space)) * 1.6129)); max-height: calc(100dvh - 205px - var(--tracing-level-space)); border-width: 2px; }
   .tracing-actions { min-height: 50px; gap: 8px; }
   .tracing-reset-button, .tracing-primary-button { min-height: 48px; min-width: 138px; padding: 10px 14px; font-size: 14px; }
   .tracing-celebrating { min-width: 138px; font-size: 17px; }
@@ -235,7 +247,7 @@
   .tracing-header { min-height: 42px; }
   .tracing-title p { display: none; }
   .tracing-instruction { min-height: 30px; font-size: 14px; }
-  .tracing-board { width: min(100%, calc((100dvh - 142px) * 1.6129), 980px); max-height: calc(100dvh - 142px); }
+  .tracing-board { width: min(100%, calc((100dvh - 142px - var(--tracing-level-space)) * 1.6129), 980px); max-height: calc(100dvh - 142px - var(--tracing-level-space)); }
   .tracing-actions { min-height: 44px; }
   .tracing-reset-button, .tracing-primary-button { min-height: 44px; padding-block: 7px; }
 }

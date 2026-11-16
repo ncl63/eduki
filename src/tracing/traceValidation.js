@@ -62,6 +62,13 @@ function nearestDistanceToPolyline(point, polyline) {
   return nearest
 }
 
+export function isSegmentInTunnel(start, end, points, radius) {
+  // Vérifie aussi l'espace entre deux événements tactiles, notamment aux virages.
+  return samplePolyline([start, end], 2).every(
+    (point) => nearestDistanceToPolyline(point, points) <= radius,
+  )
+}
+
 function orderedCoverageFor(referenceSamples, traceSamples, tolerance) {
   if (referenceSamples.length === 0 || traceSamples.length === 0) return 0
 

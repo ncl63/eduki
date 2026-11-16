@@ -88,6 +88,42 @@ test('les sept tracés, jusqu’à la lettre M, se réussissent à la souris', a
   await expect(page.getByRole('button', { name: 'Recommencer le parcours' })).toBeVisible()
 })
 
+test('le niveau libre tolère un détour, le tunnel efface le geste et relance la séquence', async ({ page }) => {
+  const guide = await sampleGuide(page)
+  const detour = [
+    ...guide.slice(0, 17),
+    { x: guide[32].x, y: guide[32].y + (guide.at(-1).x - guide[0].x) * 0.20 },
+    ...guide.slice(44),
+  ]
+  await drawWithMouse(page, detour)
+  await expect(page.getByText('Bravo ! Tu as suivi le chemin.')).toBeVisible()
+
+  const tunnel = page.getByRole('button', { name: 'Niveau 2 · Tunnel' })
+  await tunnel.click()
+  await expect(tunnel).toHaveAttribute('aria-pressed', 'true')
+  const points = await sampleGuide(page)
+  await page.mouse.move(points[0].x, points[0].y)
+  await page.mouse.down()
+  await page.mouse.move(points[5].x, points[5].y)
+  await expect(page.getByTestId('tracing-user-line')).toBeVisible()
+  await page.mouse.move(points[20].x, points[20].y + (points.at(-1).x - points[0].x) * 0.24)
+  await expect(page.getByTestId('tracing-user-line')).toHaveCount(0)
+  await page.mouse.move(points.at(-1).x, points.at(-1).y)
+  await page.mouse.up()
+  await expect(page.getByText('Repars du point vert et reste dans le tunnel.')).toBeVisible()
+
+  for (let index = 0; index < 3; index += 1) {
+    await drawWithMouse(page, await sampleGuide(page))
+    await page.getByRole('button', { name: 'Tracé suivant' }).click()
+  }
+
+  await expect(page.getByText('4 sur 7')).toBeVisible()
+  const mountain = await sampleGuide(page)
+  await drawWithMouse(page, [mountain[0], mountain.at(-1)])
+  await expect(page.getByText('1 sur 7')).toBeVisible()
+  await expect(page.getByTestId('tracing-user-line')).toHaveCount(0)
+})
+
 test('un lever bref permet de repartir simplement du début', async ({ page }) => {
   const points = await sampleGuide(page)
   await drawWithMouse(page, points.slice(0, 20))
